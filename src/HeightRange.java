@@ -1,7 +1,10 @@
+import java.util.Map;
+
 class HeightRange {
     private final int start;
     private final String name;
     private int numPassengerTrainArrivalsAndDepartures;
+    private Map<String, Integer> symbolCount;
 
     public HeightRange(int start, String name) {
         this.start = start;
@@ -27,4 +30,6 @@ class HeightRange {
     public String getName() {
         return name;
     }
+
+
 }
