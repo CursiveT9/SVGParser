@@ -24,7 +24,7 @@ public class Main {
 
             // Define the height ranges for each line (assuming each range covers 40 units)
             int[] heightRanges = new int[138]; // Total number of ranges
-            int rangeStart = 60;
+            int rangeStart = 51;
             for (int i = 0; i < heightRanges.length; i++) {
                 heightRanges[i] = rangeStart + (i * 40);
             }
@@ -41,7 +41,7 @@ public class Main {
             String[] symbols = {"осмотр состава/стоянка", "окончание формирования",
                     "опробование тормозов", "закрепление состава",
                     "стоянка пассажирского поезда", "расстановка по фронтам", "выгрузка"};
-            String[] symbolColors = {"#FFFFFF", "#000000", "#FFFFFF", "#000000", "#800080", "#000000", "#A52A2A"};
+            String[] symbolColors = {"#FFFFFF", "#000000", "#FFFFFF", "#000000", "#8A2BE2", "#000000", "#A52A2A"};
 
             // First, extract the names and corresponding y-coordinates for each line
             for (int i = 0; i < gList.getLength(); i++) {
@@ -74,7 +74,6 @@ public class Main {
                 Element gElement = (Element) gList.item(i);
 
                 // Check for <rect> elements and their attributes
-                // Check for <rect> elements and their attributes
                 NodeList rectList = gElement.getElementsByTagName("rect");
                 for (int j = 0; j < rectList.getLength(); j++) {
                     Element rectElement = (Element) rectList.item(j);
@@ -83,7 +82,7 @@ public class Main {
                     String width = rectElement.getAttribute("width");
 
                     // Skip elements that do not have the desired width
-                    if (!width.equals("138") && !width.equals("90") && !width.equals("132") && !width.equals("129")) {
+                    if (!width.equals("138") && !width.equals("90") && !width.equals("132") && !width.equals("129") && !fill.equals("FFFFFF") && !fill.equals("#8A2BE2")) {
                         continue;
                     }
 
@@ -100,6 +99,11 @@ public class Main {
 
                     // Increment the count for the corresponding height range
                     if (operation != null) {
+                        if (fill.equals("#8A2BE2")) {
+                            operation = "стоянка пассажирского поезда";
+                        } else if ((width.equals("138") || width.equals("90") || width.equals("132") || width.equals("129")) && fill.equals("#FFFFFF")) {
+                            operation = "осмотр состава/стоянка";
+                        }
                         for (int k = 0; k < heightRanges.length; k++) {
                             int range = heightRanges[k];
                             if (yValue >= range && yValue < range + 40) {
@@ -111,9 +115,37 @@ public class Main {
                     }
                 }
 
+                // Check for <ellipse> elements and their attributes
+                NodeList ellipseList = gElement.getElementsByTagName("ellipse");
+                for (int j = 0; j < ellipseList.getLength(); j++) {
+                    Element ellipseElement = (Element) ellipseList.item(j);
+                    String fill = ellipseElement.getAttribute("fill");
+                    String cy = ellipseElement.getAttribute("cy");
+
+                    double yValue = Double.parseDouble(cy);
+
+                    // Determine the type of operation based on the fill color
+                    String operation = null;
+                    if (fill.equals("#FF0000")) {
+                        operation = "предъявление состава";
+                    } else if (fill.equals("#000000")) {
+                        operation = "отдача состава";
+                    }
+
+                    // Increment the count for the corresponding height range
+                    if (operation != null) {
+                        for (int k = 0; k < heightRanges.length; k++) {
+                            int range = heightRanges[k];
+                            if (yValue >= range && yValue < range + 40) {
+                                HeightRange heightRange = heightRangesMap.get(range);
+                                heightRange.incrementSymbolCount(operation);
+                                break;
+                            }
+                        }
+                    }
+                }
             }
 
-            // Output the results with line names
             for (Map.Entry<Integer, HeightRange> entry : heightRangesMap.entrySet()) {
                 int start = entry.getKey();
                 HeightRange range = entry.getValue();
@@ -121,6 +153,8 @@ public class Main {
                 for (String symbol : symbols) {
                     System.out.println("  " + symbol + ": " + range.getSymbolCount(symbol));
                 }
+                System.out.println("  предъявление состава (ellipses with #FF0000): " + range.getSymbolCount("предъявление состава"));
+                System.out.println("  отдача состава (ellipses with #000000): " + range.getSymbolCount("отдача состава"));
             }
 
         } catch (Exception e) {
