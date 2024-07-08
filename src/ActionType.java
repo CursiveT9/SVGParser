@@ -9,6 +9,25 @@ public enum ActionType {
     LOCOMOTIVE_PROVISION, // подача поездного локомотива, готово
     ADVANCEMENT, // надвиг, готово
     LOCOMOTIVE_MOVEMENT_RESERVE, // движение локомотива резервом, готово
-    SIDETRACK_CLEANING, // уборка с подъездного пути
-    SIDETRACK_PROVISION // подача на подъездной путь
+    SIDETRACK_CLEANING, // уборка с подъездного пути, готово
+    SIDETRACK_PROVISION, // подача на подъездной путь, готово
+    TRAIN_INSPECTION_STOP, // осмотр состава/стоянка, готово
+    FORMATION_COMPLETION, // окончание формирования, готово
+    BRAKE_TESTING, // опробование тормозов
+    TRAIN_SECURING, // закрепление состава
+    PASSENGER_TRAIN_STOP, // стоянка пассажирского поезда
+    FRONT_ALIGNMENT, // расстановка по фронтам
+    UNLOADING, // выгрузка
+    CAR_DETACHMENT, // отцепка вагонов
+    TRAIN_LOCOMOTIVE_DETACHMENT, // отцепка поездного локомотива
+    SHUNTING_LOCOMOTIVE_DETACHMENT, // отцепка маневрового локомотива
+    SHUNTING_LOCOMOTIVE_ATTACHMENT, // прицепка маневрового локомотива
+    TRAIN_LOCOMOTIVE_ATTACHMENT, // прицепка поездного локомотива
+    TRAIN_PRESENTATION, // предъявление состава
+    TRAIN_HANDOVER, // отдача состава
+    IDLE_TIME, // простой
+    MOVEMENT_WAIT, // ожидание движения
+    SLOT_WAIT, // ожидание нитки
+    CREW_WAIT, // ожидание бригады
+    TRAIN_LOCOMOTIVE_ENTRY, // заезд поездного локомотива
 }

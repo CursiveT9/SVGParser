@@ -5,7 +5,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import java.io.File;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 
 public class Main {
@@ -26,17 +26,19 @@ public class Main {
             NodeList gList = document.getElementsByTagName("g");
 
             // Диапазоны высот, которые нас интересуют (высота учитывается согласно y)
-            int[] heightRanges = new int[138]; // Общее количество диапазонов
+            int documentSize = 138;
+            int[] heightRanges = new int[documentSize]; // Общее количество диапазонов
             int rangeStart = 51;
             for (int i = 0; i < heightRanges.length; i++) {
                 heightRanges[i] = rangeStart + (i * 40);
             }
 
-            Map<Integer, HeightRange> heightRangesMap = new LinkedHashMap<>();
+            Map<Integer, HeightRange> heightRangesMap = new HashMap<>();
             int numOfOperationInLine = 0;
             double elementStartX = 0.0;
             double elementEndX = 0.0;
             double elementWidth = 0.0;
+            String elementText;
             int elementY = 0; // высота элемента для дальнейшего определения его в диапазон
 
             for (int i = 0; i < gList.getLength(); i++) { // первый прогон для именования диапазонов
@@ -61,7 +63,7 @@ public class Main {
                                 int range = heightRanges[k];
                                 if (textYValue >= range && textYValue <= range + 39) {
                                     // Создаем объект HeightRange и добавляем в Map
-                                    HeightRange heightRange = new HeightRange(range, textContent);
+                                    HeightRange heightRange = new HeightRange(textContent);
                                     heightRangesMap.put(range, heightRange);
                                     break;
                                 }
@@ -75,6 +77,7 @@ public class Main {
 
             // Перебор каждого элемента <g>
             for (int i = 0; i < gList.getLength(); i++) { // основной прогон с определением элементов и добавлением их в диапазон
+
                 Element gElement = (Element) gList.item(i);
                 NodeList childNodes = gElement.getChildNodes(); // Получаем список всех дочерних узлов внутри <g>
                 int gChildNodeCount = 0; // количество дочерних элеменотов, с этим удобно отсекать лишнее в купе с количеством элементов определённого вида
@@ -90,6 +93,13 @@ public class Main {
                 NodeList rectList = gElement.getElementsByTagName("rect");
                 NodeList pathList = gElement.getElementsByTagName("path");
                 NodeList ellipseList = gElement.getElementsByTagName("ellipse");
+                NodeList textList = gElement.getElementsByTagName("text");
+
+                elementText = "0";
+                if (textList.getLength() == 1) {
+                    Element textElement = (Element) textList.item(0);
+                    elementText = textElement.getTextContent();
+                }
 
                 //- прием поезда
                 //- прием пассажирского поезда
@@ -99,44 +109,38 @@ public class Main {
                 if (pathList.getLength() == 1) {
                     Element pathElement = (Element) pathList.item(0);
                     String fill = pathElement.getAttribute("fill");
-                    String stroke = pathElement.getAttribute("stroke");
-                    String fillOpacity = pathElement.getAttribute("fill-opacity");
 
                     // отсюда начинается поиск треугольников
                     // в условии отсекаем линии чтобы не захватить стрелки
-                    if (lineList.getLength() == 0 && (stroke.equals("#FFFFFF") || stroke.equals("#000000")) && fillOpacity.equals("1.0")) { // Проверка на нужный треугольник
+                    if (lineList.getLength() == 0) {
                         String dAttribute = pathElement.getAttribute("d");
                         // Разбиение значения атрибута 'd' на отдельные команды
                         String[] commands = dAttribute.split("\\s+");
                         elementStartX = Double.parseDouble(commands[7]);
                         elementEndX = Double.parseDouble(commands[4]);
-                        NodeList textList = gElement.getElementsByTagName("text");
-                        String textContent = "0";
-                        elementY = (int) Math.round(Double.parseDouble(commands[2]));
-                        if (textList.getLength() > 0) { // если есть номер поезда, запишем
-                            Element textElement = (Element) textList.item(0);
-                            textContent = textElement.getTextContent();
-                        }
                         for (int range : heightRanges) { // определение в диапазон по высоте
                             if (elementY >= range && elementY <= range + 39) { // определение в диапазон по высоте
                                 if(commands[1].equals(commands[4]) && commands[4].equals(commands[10])) {
                                     if(fill.equals("#FF0000")){
                                         numOfOperationInLine = heightRangesMap.get(range).addAction(ActionType.PASSENGER_TRAIN_ARRIVAL, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
-                                        heightRangesMap.get(range).getActions().get(numOfOperationInLine - 1).setOtherNumInfo(Integer.parseInt(textContent)); // номер поезда
+                                        heightRangesMap.get(range).getActions().get(numOfOperationInLine - 1).setOtherNumInfo(Integer.parseInt(elementText)); // номер поезда
                                         break;
                                     } else if(fill.equals("#000000")){
                                         numOfOperationInLine = heightRangesMap.get(range).addAction(ActionType.TRAIN_ARRIVAL, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
-                                        heightRangesMap.get(range).getActions().get(numOfOperationInLine - 1).setOtherNumInfo(Integer.parseInt(textContent)); // номер поезда
+                                        heightRangesMap.get(range).getActions().get(numOfOperationInLine - 1).setOtherNumInfo(Integer.parseInt(elementText)); // номер поезда
                                         break;
                                     }
                                 } else if(commands[1].equals(commands[7]) && commands[7].equals(commands[10])){
                                     if(fill.equals("#FF0000")){
                                         numOfOperationInLine = heightRangesMap.get(range).addAction(ActionType.PASSENGER_TRAIN_DEPARTURE, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
-                                        heightRangesMap.get(range).getActions().get(numOfOperationInLine - 1).setOtherNumInfo(Integer.parseInt(textContent)); // номер поезда
+                                        heightRangesMap.get(range).getActions().get(numOfOperationInLine - 1).setOtherNumInfo(Integer.parseInt(elementText)); // номер поезда
                                         break;
                                     } else if(fill.equals("#000000")){
                                         numOfOperationInLine = heightRangesMap.get(range).addAction(ActionType.TRAIN_DEPARTURE, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
-                                        heightRangesMap.get(range).getActions().get(numOfOperationInLine - 1).setOtherNumInfo(Integer.parseInt(textContent)); // номер поезда
+                                        heightRangesMap.get(range).getActions().get(numOfOperationInLine - 1).setOtherNumInfo(Integer.parseInt(elementText)); // номер поезда
+                                        break;
+                                    } else if (fill.equals("#FFFFFF")){
+                                        heightRangesMap.get(range).addAction(ActionType.FORMATION_COMPLETION, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     }
                                 }
@@ -150,21 +154,27 @@ public class Main {
                 //- подача поездного локомотива ^
                 //- надвиг ≡
                 //- движение локомотива резервом o
-                //- уборка с подъездного пути (стреска вниз), еще не готово
-                //- подача на подъездной путь (стрелка вверх), еще не готово
+                //- уборка с подъездного пути (стреска вниз)
+                //- подача на подъездной путь (стрелка вверх)
                 // прямоугольники с: X, V, ^, o, ≡, стрелка вниз, стрелка вверх
-                if(rectList.getLength() == 1) {
+                else if(rectList.getLength() == 1) {
                     Element rectElement = (Element) rectList.item(0);
                     String fill = rectElement.getAttribute("fill");
                     String stroke = rectElement.getAttribute("stroke");
                     elementStartX =  Double.parseDouble(rectElement.getAttribute("x"));
                     elementWidth = Double.parseDouble(rectElement.getAttribute("width"));
                     elementEndX = elementStartX + elementWidth;
-                    if (fill.equals("#FFFFFF") || stroke.equals("#000000")) { // Проверка на нужный прямоугольник
+                    if (fill.equals("#FFFFFF") && stroke.equals("#000000")) { // Проверка на нужный прямоугольник
                         String yAttribute = rectElement.getAttribute("y");
                         elementY = Integer.parseInt(yAttribute);
                         for (int range : heightRanges) { // определение в диапазон по высоте
                             if (elementY >= range && elementY <= range + 39) { // определение в диапазон по высоте
+                                if (gChildNodeCount == 1) {
+                                    heightRangesMap.get(range).addAction(ActionType.TRAIN_INSPECTION_STOP, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                    break;
+                                } else if (gChildNodeCount == 2 && textList.getLength() == 1) {
+
+                                }
                                 if (lineList.getLength() == 3) { // прямоугольник с 3 линиями ≡
                                     heightRangesMap.get(range).addAction(ActionType.ADVANCEMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                                     break;
@@ -185,7 +195,18 @@ public class Main {
                                         heightRangesMap.get(range).addAction(ActionType.LOCOMOTIVE_PROVISION, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                                         break;
                                     }
-                                } else if (ellipseList.getLength() == 1 && gChildNodeCount == 2){ // o
+                                } else if(lineList.getLength() == 1 && pathList.getLength() == 1 && gChildNodeCount == 3){ // прямоугольник со стрелкой
+                                    Element firstLineElement = (Element) lineList.item(0);
+                                    double firstLineY1Attribute = Double.parseDouble(firstLineElement.getAttribute("y1"));
+                                    if (firstLineY1Attribute > Double.parseDouble(yAttribute)) { // стрелка вверх
+                                        heightRangesMap.get(range).addAction(ActionType.SIDETRACK_PROVISION, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        break;
+                                    } else if (firstLineY1Attribute == Double.parseDouble(yAttribute)) { // стрелка вниз
+                                        heightRangesMap.get(range).addAction(ActionType.SIDETRACK_CLEANING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        break;
+                                    }
+                                }
+                                if (ellipseList.getLength() == 1 && gChildNodeCount == 2){ // o
                                     heightRangesMap.get(range).addAction(ActionType.LOCOMOTIVE_MOVEMENT_RESERVE, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                                     break;
                                 }
@@ -208,11 +229,12 @@ public class Main {
 
             }
             // Вывод информации о каждом диапазоне и действиях в нём
-            for (Map.Entry<Integer, HeightRange> entry : heightRangesMap.entrySet()) {
-                int start = entry.getKey();
-                HeightRange range = entry.getValue();
-                System.out.println("Диапазон " + start + " - " + (start + 39) + " имеет название: " + range.getName());
-                for (Action action : range.getActions()) {
+            int key;
+            for (int i = 1; i < documentSize; i++) {
+                key = rangeStart + i * 40;
+                HeightRange value = heightRangesMap.get(key);
+                System.out.println("Диапазон " + key + " - " + (key + 39) + " имеет название: " + value.getName());
+                for (Action action : value.getActions()) {
                     System.out.println(action);
                 }
             }
