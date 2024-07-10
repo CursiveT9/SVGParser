@@ -100,16 +100,14 @@ public class Main {
                     Element textElement = (Element) textList.item(0);
                     elementText = textElement.getTextContent();
                 }
-
                 //- прием поезда
                 //- прием пассажирского поезда
                 //- отправление пассажирского поезда
                 //- отправление поезда
                 // прием и отправление любого поезда (красные и черные треугольники)
-                if (pathList.getLength() == 1) {
+                if (pathList.getLength() == 1 && rectList.getLength() == 0) {
                     Element pathElement = (Element) pathList.item(0);
-                    String fill = pathElement.getAttribute("fill");
-
+                    String pathFill = pathElement.getAttribute("fill");
                     // отсюда начинается поиск треугольников
                     // в условии отсекаем линии чтобы не захватить стрелки
                     if (lineList.getLength() == 0) {
@@ -120,26 +118,26 @@ public class Main {
                         elementEndX = Double.parseDouble(commands[4]);
                         for (int range : heightRanges) { // определение в диапазон по высоте
                             if (elementY >= range && elementY <= range + 39) { // определение в диапазон по высоте
-                                if(commands[1].equals(commands[4]) && commands[4].equals(commands[10])) {
-                                    if(fill.equals("#FF0000")){
+                                if(commands[1].equals(commands[4]) && commands[4].equals(commands[10])) { // треугольник на подъем
+                                    if(pathFill.equals("#FF0000")){
                                         numOfOperationInLine = heightRangesMap.get(range).addAction(ActionType.PASSENGER_TRAIN_ARRIVAL, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         heightRangesMap.get(range).getActions().get(numOfOperationInLine - 1).setOtherNumInfo(Integer.parseInt(elementText)); // номер поезда
                                         break;
-                                    } else if(fill.equals("#000000")){
+                                    } else if(pathFill.equals("#000000")){
                                         numOfOperationInLine = heightRangesMap.get(range).addAction(ActionType.TRAIN_ARRIVAL, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         heightRangesMap.get(range).getActions().get(numOfOperationInLine - 1).setOtherNumInfo(Integer.parseInt(elementText)); // номер поезда
                                         break;
                                     }
-                                } else if(commands[1].equals(commands[7]) && commands[7].equals(commands[10])){
-                                    if(fill.equals("#FF0000")){
+                                } else if(commands[1].equals(commands[7]) && commands[7].equals(commands[10])){ // треугольник на спуск
+                                    if(pathFill.equals("#FF0000")){
                                         numOfOperationInLine = heightRangesMap.get(range).addAction(ActionType.PASSENGER_TRAIN_DEPARTURE, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         heightRangesMap.get(range).getActions().get(numOfOperationInLine - 1).setOtherNumInfo(Integer.parseInt(elementText)); // номер поезда
                                         break;
-                                    } else if(fill.equals("#000000")){
+                                    } else if(pathFill.equals("#000000")){
                                         numOfOperationInLine = heightRangesMap.get(range).addAction(ActionType.TRAIN_DEPARTURE, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         heightRangesMap.get(range).getActions().get(numOfOperationInLine - 1).setOtherNumInfo(Integer.parseInt(elementText)); // номер поезда
                                         break;
-                                    } else if (fill.equals("#FFFFFF")){
+                                    } else if (pathFill.equals("#FFFFFF")){
                                         heightRangesMap.get(range).addAction(ActionType.FORMATION_COMPLETION, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     }
@@ -156,15 +154,16 @@ public class Main {
                 //- движение локомотива резервом o
                 //- уборка с подъездного пути (стреска вниз)
                 //- подача на подъездной путь (стрелка вверх)
-                // прямоугольники с: X, V, ^, o, ≡, стрелка вниз, стрелка вверх
+                //- еще много чего)
+                // прямоугольники с: X, V, ^, o, ≡, стрелка вниз, стрелка вверх, -, полосой по диагонали идущей  вниз и вверх
                 else if(rectList.getLength() == 1) {
                     Element rectElement = (Element) rectList.item(0);
-                    String fill = rectElement.getAttribute("fill");
+                    String rectFill = rectElement.getAttribute("fill");
                     String stroke = rectElement.getAttribute("stroke");
                     elementStartX =  Double.parseDouble(rectElement.getAttribute("x"));
                     elementWidth = Double.parseDouble(rectElement.getAttribute("width"));
                     elementEndX = elementStartX + elementWidth;
-                    if (fill.equals("#FFFFFF") && stroke.equals("#000000")) { // Проверка на нужный прямоугольник
+                    if (rectFill.equals("#FFFFFF") && stroke.equals("#000000")) { // Проверка на нужный прямоугольник
                         String yAttribute = rectElement.getAttribute("y");
                         elementY = Integer.parseInt(yAttribute);
                         for (int range : heightRanges) { // определение в диапазон по высоте
@@ -203,6 +202,40 @@ public class Main {
                                         break;
                                     } else if (firstLineY1Attribute == Double.parseDouble(yAttribute)) { // стрелка вниз
                                         heightRangesMap.get(range).addAction(ActionType.SIDETRACK_CLEANING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        break;
+                                    }
+                                } else if(lineList.getLength() == 1 && gChildNodeCount == 2){
+                                    Element firstLineElement = (Element) lineList.item(0);
+                                    double firstLineY1Attribute = Double.parseDouble(firstLineElement.getAttribute("y1"));
+                                    double firstLineY2Attribute = Double.parseDouble(firstLineElement.getAttribute("y2"));
+                                    if (firstLineY1Attribute == firstLineY2Attribute) { // прямая линия
+                                        heightRangesMap.get(range).addAction(ActionType.BRAKE_TESTING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        break;
+                                    } else if(firstLineY1Attribute > firstLineY2Attribute){ // прямоугольник с линией идущей снизу вверх
+                                        heightRangesMap.get(range).addAction(ActionType.SHUNTING_LOCOMOTIVE_ATTACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        break;
+                                    } else if(firstLineY1Attribute < firstLineY2Attribute){ // прямоугольник с линией идущей сверху вниз
+                                        heightRangesMap.get(range).addAction(ActionType.SHUNTING_LOCOMOTIVE_DETACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        break;
+                                    }
+                                }
+                                if (pathList.getLength() == 1 && gChildNodeCount == 2) { // прямоугольник с треугольником
+                                    Element pathElement = (Element) pathList.item(0);
+                                    String pathFill = pathElement.getAttribute("fill");
+                                    String dAttribute = pathElement.getAttribute("d");
+                                    String[] commands = dAttribute.split("\\s+");
+                                    if (commands[1].equals(commands[4]) && commands[4].equals(commands[10])) { // треугольник на подъем
+                                        System.out.println();
+                                    } else if (commands[1].equals(commands[7]) && commands[7].equals(commands[10])) { // треугольник на спуск
+                                        if (commands[2].equals(commands[5])) { // отзеркаленый треугольник на подъём(треугольник в верхнем левом углу)
+                                            heightRangesMap.get(range).addAction(ActionType.TRAIN_LOCOMOTIVE_ATTACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
+                                            break;
+                                        } else if (pathFill.equals("#8B4513")) { //D2691E другой оттенок, надо спросить
+                                            heightRangesMap.get(range).addAction(ActionType.UNLOADING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
+                                            break;
+                                        }
+                                    } else if (commands[1].equals(commands[10]) && commands[4].equals(commands[7])) {  // отзеркаленый треугольник на спуск(треугольник в верхнем правом углу)
+                                        heightRangesMap.get(range).addAction(ActionType.TRAIN_LOCOMOTIVE_DETACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     }
                                 }

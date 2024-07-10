@@ -13,16 +13,16 @@ public enum ActionType {
     SIDETRACK_PROVISION, // подача на подъездной путь, готово
     TRAIN_INSPECTION_STOP, // осмотр состава/стоянка, готово
     FORMATION_COMPLETION, // окончание формирования, готово
-    BRAKE_TESTING, // опробование тормозов
+    BRAKE_TESTING, // опробование тормозов, готово
     TRAIN_SECURING, // закрепление состава
     PASSENGER_TRAIN_STOP, // стоянка пассажирского поезда
     FRONT_ALIGNMENT, // расстановка по фронтам
-    UNLOADING, // выгрузка
+    UNLOADING, // выгрузка, готово
     CAR_DETACHMENT, // отцепка вагонов
-    TRAIN_LOCOMOTIVE_DETACHMENT, // отцепка поездного локомотива
-    SHUNTING_LOCOMOTIVE_DETACHMENT, // отцепка маневрового локомотива
-    SHUNTING_LOCOMOTIVE_ATTACHMENT, // прицепка маневрового локомотива
-    TRAIN_LOCOMOTIVE_ATTACHMENT, // прицепка поездного локомотива
+    TRAIN_LOCOMOTIVE_DETACHMENT, // отцепка поездного локомотива, готово
+    SHUNTING_LOCOMOTIVE_DETACHMENT, // отцепка маневрового локомотива, готово
+    SHUNTING_LOCOMOTIVE_ATTACHMENT, // прицепка маневрового локомотива, готово
+    TRAIN_LOCOMOTIVE_ATTACHMENT, // прицепка поездного локомотива, готово
     TRAIN_PRESENTATION, // предъявление состава
     TRAIN_HANDOVER, // отдача состава
     IDLE_TIME, // простой
