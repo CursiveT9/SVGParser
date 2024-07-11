@@ -116,6 +116,7 @@ public class Main {
                         String[] commands = dAttribute.split("\\s+");
                         elementStartX = Double.parseDouble(commands[7]);
                         elementEndX = Double.parseDouble(commands[4]);
+                        elementY = (int) Math.round(Double.parseDouble(commands[2]));
                         for (int range : heightRanges) { // определение в диапазон по высоте
                             if (elementY >= range && elementY <= range + 39) { // определение в диапазон по высоте
                                 if(commands[1].equals(commands[4]) && commands[4].equals(commands[10])) { // треугольник на подъем
@@ -263,7 +264,7 @@ public class Main {
             }
             // Вывод информации о каждом диапазоне и действиях в нём
             int key;
-            for (int i = 1; i < documentSize; i++) {
+            for (int i = 0; i < documentSize; i++) {
                 key = rangeStart + i * 40;
                 HeightRange value = heightRangesMap.get(key);
                 System.out.println("Диапазон " + key + " - " + (key + 39) + " имеет название: " + value.getName());
