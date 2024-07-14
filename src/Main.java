@@ -202,7 +202,14 @@ public class Main {
                                         heightRangesMap.get(range).addAction(ActionType.SIDETRACK_PROVISION, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                                         break;
                                     } else if (firstLineY1Attribute == Double.parseDouble(yAttribute)) { // стрелка вниз
-                                        heightRangesMap.get(range).addAction(ActionType.SIDETRACK_CLEANING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        Element firstPathElement = (Element) pathList.item(0);
+                                        String dAttribute = firstPathElement.getAttribute("d");
+                                        String[] commands = dAttribute.split("\\s+");
+                                        if (commands[1].equals(commands[4])){
+                                            heightRangesMap.get(range).addAction(ActionType.CAR_DETACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        } else {
+                                            heightRangesMap.get(range).addAction(ActionType.SIDETRACK_CLEANING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        }
                                         break;
                                     }
                                 } else if(lineList.getLength() == 1 && gChildNodeCount == 2){
@@ -222,16 +229,16 @@ public class Main {
                                 }
                                 if (pathList.getLength() == 1 && gChildNodeCount == 2) { // прямоугольник с треугольником
                                     Element pathElement = (Element) pathList.item(0);
-                                    String pathFill = pathElement.getAttribute("fill");
                                     String dAttribute = pathElement.getAttribute("d");
                                     String[] commands = dAttribute.split("\\s+");
                                     if (commands[1].equals(commands[4]) && commands[4].equals(commands[10])) { // треугольник на подъем
-                                        System.out.println();
+                                        heightRangesMap.get(range).addAction(ActionType.LOADING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
+                                        break;
                                     } else if (commands[1].equals(commands[7]) && commands[7].equals(commands[10])) { // треугольник на спуск
                                         if (commands[2].equals(commands[5])) { // отзеркаленый треугольник на подъём(треугольник в верхнем левом углу)
                                             heightRangesMap.get(range).addAction(ActionType.TRAIN_LOCOMOTIVE_ATTACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                             break;
-                                        } else if (pathFill.equals("#8B4513")) { //D2691E другой оттенок, надо спросить
+                                        } else {
                                             heightRangesMap.get(range).addAction(ActionType.UNLOADING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                             break;
                                         }
@@ -239,12 +246,27 @@ public class Main {
                                         heightRangesMap.get(range).addAction(ActionType.TRAIN_LOCOMOTIVE_DETACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     }
+                                } else if (pathList.getLength() == 2 && gChildNodeCount == 3) {
+                                    heightRangesMap.get(range).addAction(ActionType.FRONT_ALIGNMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
+                                    break;
                                 }
                                 if (ellipseList.getLength() == 1 && gChildNodeCount == 2){ // o
                                     heightRangesMap.get(range).addAction(ActionType.LOCOMOTIVE_MOVEMENT_RESERVE, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                                     break;
                                 }
                             }
+                        }
+                    }
+                } else if (rectList.getLength() == 2 && gChildNodeCount == 2){
+                    Element rectElement = (Element) rectList.item(0);
+                    elementStartX =  Double.parseDouble(rectElement.getAttribute("x"));
+                    elementWidth = Double.parseDouble(rectElement.getAttribute("width"));
+                    elementEndX = elementStartX + elementWidth;
+                    String yAttribute = rectElement.getAttribute("y");
+                    elementY = Integer.parseInt(yAttribute);
+                    for (int range : heightRanges) { // определение в диапазон по высоте
+                        if (elementY >= range && elementY <= range + 39) {
+                            heightRangesMap.get(range).addAction(ActionType.TRAIN_SECURING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                         }
                     }
                 }
@@ -262,6 +284,12 @@ public class Main {
                 // TODO: Остальные фигуры
 
             }
+
+//            NodeList clipPathList = document.getElementsByTagName("clipPath");
+//            for (int i = 0; i < clipPathList.getLength(); i++) {
+//
+//            }
+
             // Вывод информации о каждом диапазоне и действиях в нём
             int key;
             for (int i = 0; i < documentSize; i++) {

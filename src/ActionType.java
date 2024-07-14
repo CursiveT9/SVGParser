@@ -14,11 +14,12 @@ public enum ActionType {
     TRAIN_INSPECTION_STOP, // осмотр состава/стоянка, готово
     FORMATION_COMPLETION, // окончание формирования, готово
     BRAKE_TESTING, // опробование тормозов, готово
-    TRAIN_SECURING, // закрепление состава
+    TRAIN_SECURING, // закрепление состава, готово
     PASSENGER_TRAIN_STOP, // стоянка пассажирского поезда
     FRONT_ALIGNMENT, // расстановка по фронтам
     UNLOADING, // выгрузка, готово
-    CAR_DETACHMENT, // отцепка вагонов
+    LOADING, // погрузка, готово
+    CAR_DETACHMENT, // отцепка вагонов, готово
     TRAIN_LOCOMOTIVE_DETACHMENT, // отцепка поездного локомотива, готово
     SHUNTING_LOCOMOTIVE_DETACHMENT, // отцепка маневрового локомотива, готово
     SHUNTING_LOCOMOTIVE_ATTACHMENT, // прицепка маневрового локомотива, готово
