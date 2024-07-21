@@ -342,7 +342,7 @@ public class Main {
 
     // Метод для подсчёта продолжительности в минутах по двум координатам в миллисекундах
     public static int calculateTimeDuration(double elementStartX, double elementEndX) {
-        return (int) (elementEndX - elementStartX / 180 * 60 * 60 * 1000);
+        return (int) ((elementEndX - elementStartX) / 180 * 60 * 60 * 1000);
     }
 
     // Метод для подсчёта продолжительности по ширине в миллисекундах
