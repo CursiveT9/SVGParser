@@ -31,4 +31,9 @@ public enum ActionType {
     SLOT_WAIT, // ожидание нитки
     CREW_WAIT, // ожидание бригады
     TRAIN_LOCOMOTIVE_ENTRY, // заезд поездного локомотива
+    TRAIN_DISSOLUTION, // роспуск состава
+    SHUNTING_LOCOMOTIVE_RECOUPLING, // перецепка маневрового локомотива
+    HUMP_LOCOMOTIVE_ATTACHMENT_FOR_ADVANCEMENT, // прицепка горочного локомотива для надвига
+    CAR_PUSHBACK, // осаживание вагонов
+    DISSOLUTION_PERMISSION_WAIT, // ожидание разрешения на роспуск
 }
