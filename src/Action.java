@@ -61,9 +61,10 @@ public class Action {
         this.operationNumber = operationNumber;
     }
 
-    public void adjustTimes(int startTime) {
-        this.start += startTime;
-        this.end += startTime;
+    public void adjustTimes(int startTimeInMillis) {
+        int millisecondsInDay = 86400000; // количество миллисекунд в дне
+        this.start = (this.start + startTimeInMillis) % millisecondsInDay;
+        this.end = (this.end + startTimeInMillis) % millisecondsInDay;
     }
 
     @Override
