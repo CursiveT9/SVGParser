@@ -48,16 +48,22 @@ public class Main {
             }
 
             Map<Integer, HeightRange> heightRangesMap = new HashMap<>();
-            int numOfOperationInLine = 0;
             double elementStartX = 0.0;
             double elementEndX = 0.0;
             double elementWidth = 0.0;
             String elementText;
             int elementY = 0; // высота элемента для дальнейшего определения его в диапазон
+            int startTime = 0;
 
             for (int i = 0; i < gList.getLength(); i++) { // первый прогон для именования диапазонов
                 Element gElement = (Element) gList.item(i);
                 String gId = gElement.getAttribute("id");
+                if ("TimelineScale".equals(gId)) {
+                    NodeList childTextList = gElement.getElementsByTagName("text");
+                    Element textElement = (Element) childTextList.item(0);
+                    startTime = Integer.parseInt(textElement.getTextContent());
+                    System.out.println("Начало суточника в " + startTime + " часов");
+                }
                 if ("DailyDiagramCaptionView".equals(gId)) {
                     NodeList childGList = gElement.getElementsByTagName("g");
                     // Проходим по списку дочерних <g> элементов
@@ -84,6 +90,7 @@ public class Main {
                             }
                         }
                     }
+                    break;
                 }
             }
 
@@ -324,6 +331,9 @@ public class Main {
                 key = rangeStart + i * 40;
                 HeightRange value = heightRangesMap.get(key);
                 value.numberActionsByStart();
+                if (startTime != 0){
+                    value.adjustTimes(startTime * 60 * 60 * 1000);
+                }
                 System.out.println("Диапазон " + key + " - " + (key + 39) + " имеет название: " + value.getName());
                 for (Action action : value.getActions()) {
                     System.out.println(action);

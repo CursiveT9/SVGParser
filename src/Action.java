@@ -1,8 +1,8 @@
 // Класс действия (операции)
 public class Action {
     private final ActionType type;
-    private final int start;
-    private final int end;
+    private int start;
+    private int end;
     private final int duration;
     private int operationNumber;
     private final int otherNumInfo;
@@ -59,6 +59,11 @@ public class Action {
 
     public void setOperationNumber(int operationNumber) {
         this.operationNumber = operationNumber;
+    }
+
+    public void adjustTimes(int startTime) {
+        this.start += startTime;
+        this.end += startTime;
     }
 
     @Override
