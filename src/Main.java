@@ -39,13 +39,10 @@ public class Main {
             Element currentElement = null;
             Element nextElement = iterator.next();
 
-            // Диапазоны высот, которые нас интересуют (высота учитывается согласно y)
-            int documentSize = 138;
-            int[] heightRanges = new int[documentSize]; // Общее количество диапазонов
-            int rangeStart = 51;
-            for (int i = 0; i < heightRanges.length; i++) {
-                heightRanges[i] = rangeStart + (i * 40);
-            }
+            int documentSize = 0; // Количество строк
+            int[] heightRanges = new int[documentSize];; // Общее количество диапазонов
+            int rangeStart = 51; // Первая строка
+            int rowHeight = 40; // Высота строк
 
             Map<Integer, HeightRange> heightRangesMap = new HashMap<>();
             double elementStartX = 0.0;
@@ -55,7 +52,7 @@ public class Main {
             int elementY = 0; // высота элемента для дальнейшего определения его в диапазон
             int startTime = 0;
 
-            for (int i = 0; i < gList.getLength(); i++) { // первый прогон для именования диапазонов
+            for (int i = 0; i < gList.getLength(); i++) { // первый прогон для определения размера файла и именования диапазонов
                 Element gElement = (Element) gList.item(i);
                 String gId = gElement.getAttribute("id");
                 if ("TimelineScale".equals(gId)) {
@@ -66,18 +63,30 @@ public class Main {
                 }
                 if ("DailyDiagramCaptionView".equals(gId)) {
                     NodeList childGList = gElement.getElementsByTagName("g");
-                    // Проходим по списку дочерних <g> элементов
-                    for (int j = 0; j < childGList.getLength(); j++) {
+                    for (int j = 0; j < childGList.getLength(); j++) { // считаем количество строк, строки, повёрнутые на 90 градусов, не считаем
+                        Element childGElement = (Element) childGList.item(j);
+                        NodeList textList = childGElement.getElementsByTagName("text");
+                        if (textList.getLength() > 0) {
+                            Element textElement = (Element) textList.item(0);
+                            String textTransform = textElement.getAttribute("transform");
+                            String[] transformContent = textTransform.split("\\s+");
+                            if(transformContent[0].equals("rotate(0")) {
+                                documentSize++;
+                            }
+                        }
+                    }
+                    heightRanges = new int[documentSize];
+                    for (int k = 0; k < heightRanges.length; k++) {
+                        heightRanges[k] = rangeStart + (k * rowHeight);
+                    }
+                    for (int j = 0; j < childGList.getLength(); j++) { // заполняем диапазоны именами, строки, повёрнутые на 90 градусов, сначала записываются в диапазон, так как в документе раньше написаны, но потом они перезаписываются нормальной строкой, так что всё норм
                         Element childGElement = (Element) childGList.item(j);
                         NodeList textList = childGElement.getElementsByTagName("text");
                         if (textList.getLength() > 0) {
                             Element textElement = (Element) textList.item(0);
                             String textContent = textElement.getTextContent().trim();
-
-                            // Извлекаем координаты текста
                             String textY = textElement.getAttribute("y");
                             double textYValue = Double.parseDouble(textY);
-
                             // Находим соответствующий диапазон высоты
                             for (int k = 0; k < heightRanges.length; k++) {
                                 int range = heightRanges[k];
@@ -94,7 +103,7 @@ public class Main {
                 }
             }
 
-            // в код что выше просто верьте
+            // в код, который выше, просто верьте, он важен и в меру универсален
 
             // Перебор каждого элемента
             while (iterator.hasNext()) {

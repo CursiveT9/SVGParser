@@ -16,7 +16,7 @@ public enum ActionType {
     BRAKE_TESTING, // опробование тормозов, готово
     TRAIN_SECURING, // закрепление состава, готово
     PASSENGER_TRAIN_STOP, // стоянка пассажирского поезда
-    FRONT_ALIGNMENT, // расстановка по фронтам
+    FRONT_ALIGNMENT, // расстановка по фронтам, готово
     UNLOADING, // выгрузка, готово
     LOADING, // погрузка, готово
     CAR_DETACHMENT, // отцепка вагонов, готово
@@ -26,14 +26,14 @@ public enum ActionType {
     TRAIN_LOCOMOTIVE_ATTACHMENT, // прицепка поездного локомотива, готово
     TRAIN_PRESENTATION, // предъявление состава
     TRAIN_HANDOVER, // отдача состава
-    IDLE_TIME, // простой
-    MOVEMENT_WAIT, // ожидание движения
-    SLOT_WAIT, // ожидание нитки
-    CREW_WAIT, // ожидание бригады
-    TRAIN_LOCOMOTIVE_ENTRY, // заезд поездного локомотива
+    IDLE_TIME, // простой, готово
+    MOVEMENT_WAIT, // ожидание движения, готово
+    SLOT_WAIT, // ожидание нитки, готово
+    CREW_WAIT, // ожидание бригады, готово
+    TRAIN_LOCOMOTIVE_ENTRY, // заезд поездного локомотива, готово
     TRAIN_DISSOLUTION, // роспуск состава
     SHUNTING_LOCOMOTIVE_RECOUPLING, // перецепка маневрового локомотива
     HUMP_LOCOMOTIVE_ATTACHMENT_FOR_ADVANCEMENT, // прицепка горочного локомотива для надвига
     CAR_PUSHBACK, // осаживание вагонов
-    DISSOLUTION_PERMISSION_WAIT, // ожидание разрешения на роспуск
+    DISSOLUTION_PERMISSION_WAIT, // ожидание разрешения на роспуск, готово
 }
