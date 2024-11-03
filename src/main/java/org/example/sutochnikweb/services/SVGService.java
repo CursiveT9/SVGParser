@@ -1,24 +1,29 @@
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
+package org.example.sutochnikweb.services;
 
+import org.example.sutochnikweb.models.*;
+import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class Main {
-    public static void main(String[] args) {
+@Service
+public class SVGService {
+    public LinkedHashMap<String, HeightRange> parseSvg(File svgFile) {
         try {
             // Указание полного пути к файлу SVG, если не фуричит значит что-то с кодировкой в проекте
-            File svgFile = new File("C:\\Users\\PCAdmin\\Desktop\\План_график_Туапсе_Сортировочная_Общая_Туапсе_Сорт_2_сутки_с_0_до.svg");
-
             // Создание фабрики и билдера для парсинга XML
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
 
+            // Парсинг XML-документа
             // Парсинг XML-документа
             Document document = builder.parse(svgFile);
             document.getDocumentElement().normalize();
@@ -34,6 +39,7 @@ public class Main {
                     normalElementList.add((Element) node);
                 }
             }
+            LinkedList<String> textBuffer = new LinkedList<>();
             Iterator<Element> iterator = normalElementList.iterator();
             Element previousElement = null;
             Element currentElement = null;
@@ -44,7 +50,8 @@ public class Main {
             int rangeStart = 51; // Первая строка
             int rowHeight = 40; // Высота строк
 
-            Map<Integer, HeightRange> heightRangesMap = new HashMap<>();
+            Map<Integer, HeightRange> heightRangesMap = new LinkedHashMap<>();
+            int numOfOperationInLine = 0;
             double elementStartX = 0.0;
             double elementEndX = 0.0;
             double elementWidth = 0.0;
@@ -198,7 +205,8 @@ public class Main {
                                     heightRangesMap.get(range).addAction(ActionType.TRAIN_INSPECTION_STOP, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                                     break;
                                 } else if (gChildNodeCount == 2 && textList.getLength() == 1) {
-
+                                    heightRangesMap.get(range).addAction(ActionType.TRAIN_INSPECTION_STOP, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth), elementText);
+                                    break;
                                 }
                                 if (lineList.getLength() == 3) { // прямоугольник с 3 линиями ≡
                                     heightRangesMap.get(range).addAction(ActionType.ADVANCEMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
@@ -294,6 +302,35 @@ public class Main {
                             }
                         }
                     }
+
+
+                    else if (ellipseList.getLength() == 1 && gChildNodeCount == 1) {
+                        Element ellipseElement = (Element) ellipseList.item(0);
+                        String pathFill = ellipseElement.getAttribute("fill");
+                        String yAttribute = ellipseElement.getAttribute("cy");
+//                        elementStartX = Double.parseDouble(ellipseElement.getAttribute("cx"));
+//                        elementWidth = Double.parseDouble(ellipseElement.getAttribute("stroke-width"));
+//                        elementEndX = elementStartX + elementWidth;
+                        elementStartX = Double.parseDouble(ellipseElement.getAttribute("cx")) - 1.5;
+                        elementWidth = Double.parseDouble(ellipseElement.getAttribute("stroke-width")) + 2;
+                        elementEndX = elementStartX + elementWidth;
+                        //говорили что эти операции занимают минуту, но по файлу выходит 20 секунд, я сделаю минуту(посчитал как на графике рисуется и добавил к ширине и сдвинул влево), а закомментированный это ваприант считает по рисунку
+                        elementY = Integer.parseInt(yAttribute);
+                        for (int range : heightRanges) { // определение в диапазон по высоте
+                            if (elementY >= range && elementY <= range + 39) {
+                                if (pathFill.equals("#FF0000")) { // красный круг
+                                    heightRangesMap.get(range).addAction(ActionType.TRAIN_PRESENTATION, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                    break;
+                                } else if (pathFill.equals("#000000")) { // черный круг
+                                    heightRangesMap.get(range).addAction(ActionType.TRAIN_HANDOVER, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                    break;
+                                }
+                            }
+                        }
+                    } // тут продлить, чтобы обработать g
+
+
+                // если это не g, например ожидание находится вне g
                 } else if (currentElement.getTagName().equals("clipPath")) { // если это не g, например ожидание находится вне g
                     assert previousElement != null;
                     if (previousElement.getTagName().equals("rect") && nextElement.getTagName().equals("path")) {
@@ -329,12 +366,107 @@ public class Main {
                         }
                     }
                 }
+                else if (currentElement.getTagName().equals("text")) {
+                    // Добавляем текстовое значение в буфер
+                    textBuffer.add(currentElement.getTextContent());
+                } else if (currentElement.getTagName().equals("path")) {
+                    String dAttribute = currentElement.getAttribute("d");
+                    String pathFill = currentElement.getAttribute("fill");
+                    if (!pathFill.equals("#FFFFFF") && dAttribute != null && !dAttribute.isEmpty()) {
+                        // Регулярные выражения для извлечения команд и координат
+                        Pattern pattern = Pattern.compile("([ML])\\s*(-?\\d+\\.\\d+|-?\\d+)\\s*(-?\\d+\\.\\d+|-?\\d+)");
+                        Matcher matcher = pattern.matcher(dAttribute);
+
+                        List<PathData> pathDataList = new ArrayList<>();
+                        PathData currentPathData = null;
+                        double prevY = Double.NaN;
+                        double prevX = Double.NaN;
+
+                        while (matcher.find()) {
+                            String command = matcher.group(1);
+                            double x = Double.parseDouble(matcher.group(2));
+                            double y = Double.parseDouble(matcher.group(3));
+
+                            if (command.equals("M")) {
+                                // Создаем новый PathData при новой начальной точке
+                                currentPathData = new PathData(new PointAccum(x, y));
+                                pathDataList.add(currentPathData);
+                            }
+
+                            if (command.equals("L") && currentPathData != null) {
+                                if (!Double.isNaN(prevY) && y != prevY) {
+                                    currentPathData.getChangePoints().add(new PointAccum(x, y));
+                                }
+                            }
+                            prevX = x;
+                            // Обновляем значение предыдущего Y для следующей итерации
+                            prevY = y;
+                        }
+
+                        // Устанавливаем конечную точку для каждого PathData
+                        if (currentPathData != null) {
+                            PointAccum endPoint = new PointAccum(prevX, prevY);
+                            currentPathData.setEndPoint(endPoint);
+                        }
+                        List<PathData> clearedPathData = new ArrayList<>();
+                        for (PathData pathData : pathDataList) {
+                            if (pathData.getStartPoint().x != pathData.getEndPoint().x) {
+                                clearedPathData.add(pathData);
+                            }
+                        }
+
+                        for (PathData pathData : clearedPathData) {
+                            List<PointAccum> changePoints = pathData.getChangePoints();
+
+                            // Пропускаем, если нет точек изменений
+                            if (changePoints.isEmpty()) {
+                                continue;
+                            }
+
+                            int changePointsCount = changePoints.size();
+                            if (textBuffer.size() >= changePointsCount) {
+                                List<String> relevantTexts = textBuffer.subList(textBuffer.size() - changePointsCount+1, textBuffer.size());
+
+                                elementY = (int) Math.round(pathData.getStartPoint().y);
+                                for (int range : heightRanges) {
+                                    if (elementY >= range && elementY <= range + 39) {
+                                        // Проходим по всем точкам изменений и записываем их в heightRange
+                                        for (int j = 0; j < changePoints.size()-1; j++) {
+                                            double startX = changePoints.get(j).x;
+                                            double nextX = changePoints.get(j + 1).x;
+                                            String textValue = relevantTexts.get(j);
+
+                                            heightRangesMap.get(range).addAction(
+                                                    ActionType.ACCUMULATION,
+                                                    calculateTime(startX),
+                                                    calculateTime(nextX),
+                                                    calculateTimeDuration(startX, nextX),
+                                                    textValue
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Удаляем из буфера количество текстов, которые были обработаны
+                            for (int i = 0; i < changePointsCount; i++) {
+                                if (!textBuffer.isEmpty()) {
+                                    textBuffer.removeLast();
+                                }
+                            }
+                        }
+                    }
+                }
+
+
 
                 // TODO: Остальные фигуры
 
             }
 
             // Вывод информации о каждом диапазоне и действиях в нём
+            //TODO: Костыли!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
             int key;
             for (int i = 0; i < documentSize; i++) {
                 key = rangeStart + i * 40;
@@ -343,13 +475,18 @@ public class Main {
                 if (startTime != 0){
                     value.adjustTimes(startTime * 60 * 60 * 1000);
                 }
-                System.out.println("Диапазон " + key + " - " + (key + 39) + " имеет название: " + value.getName());
-                for (Action action : value.getActions()) {
-                    System.out.println(action);
-                }
             }
+
+            LinkedHashMap<String, HeightRange> stringHeightRangeHashMap = new LinkedHashMap<>();
+            for (Map.Entry<Integer, HeightRange> entry : heightRangesMap.entrySet()) {
+                HeightRange range = entry.getValue();
+                stringHeightRangeHashMap.put(range.getName(), entry.getValue());
+            }
+
+            return stringHeightRangeHashMap;
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
     }
 

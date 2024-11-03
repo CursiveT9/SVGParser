@@ -1,3 +1,5 @@
+package org.example.sutochnikweb.models;
+
 // Класс действия (операции)
 public class Action {
     private final ActionType type;
