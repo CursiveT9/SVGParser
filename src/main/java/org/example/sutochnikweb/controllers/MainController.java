@@ -4,10 +4,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.example.sutochnikweb.models.ExcelPreview;
 import org.example.sutochnikweb.models.HeightRange;
 import org.example.sutochnikweb.models.OperationStats;
-import org.example.sutochnikweb.services.SimpleExcelService;
-import org.example.sutochnikweb.services.SVGService;
-import org.example.sutochnikweb.services.TimeService;
-import org.example.sutochnikweb.services.UtilService;
+import org.example.sutochnikweb.services.*;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -37,13 +34,18 @@ public class MainController {
     private SVGService svgService;
     private TimeService timeService;
     private UtilService utilService;
+
+    private TransitTrainsService transitTrainsService;
+
     private byte[] excelBytes;
 
-    public MainController(SimpleExcelService excelService, SVGService svgService, TimeService timeService, UtilService utilService) {
+
+    public MainController(SimpleExcelService excelService, SVGService svgService, TimeService timeService, UtilService utilService, TransitTrainsService transitTrainsService) {
         this.excelService = excelService;
         this.svgService = svgService;
         this.timeService = timeService;
         this.utilService = utilService;
+        this.transitTrainsService = transitTrainsService;
     }
 
     @GetMapping("/")
@@ -72,6 +74,7 @@ public class MainController {
             File tempFile = tempFilePath.toFile();
 
             Map<String, HeightRange> map = svgService.parseSvg(tempFile);
+            transitTrainsService.findActionPairs(map);//Убрать, нужно для вывода в консоль для теста транзитных поездов
             Workbook excelFile = excelService.convertToExcel(map);
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();

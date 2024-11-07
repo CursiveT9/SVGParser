@@ -17,7 +17,6 @@ public class SimpleExcelService {
         this.timeService = timeService;
     }
     public Workbook convertToExcel(Map<String, HeightRange> map){
-        SVGService svgParsing = new SVGService();
         // Создание нового Excel workbook
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Sheet1");

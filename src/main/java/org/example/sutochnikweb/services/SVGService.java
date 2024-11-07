@@ -16,6 +16,8 @@ import java.util.regex.Pattern;
 
 @Service
 public class SVGService {
+    static final Double START_X_FROM_0 = 250.0;
+    static Double END_X;
     public LinkedHashMap<String, HeightRange> parseSvg(File svgFile) {
         try {
             // Указание полного пути к файлу SVG, если не фуричит значит что-то с кодировкой в проекте
@@ -27,6 +29,12 @@ public class SVGService {
             // Парсинг XML-документа
             Document document = builder.parse(svgFile);
             document.getDocumentElement().normalize();
+
+            Element documentElement = document.getDocumentElement();
+            // Чтение width документа
+            String widthStr = documentElement.getAttribute("width");
+            END_X = Double.parseDouble(widthStr);
+
 
             // Получение списка всех элементов <g> в документе
             NodeList gList = document.getElementsByTagName("g");
@@ -46,7 +54,8 @@ public class SVGService {
             Element nextElement = iterator.next();
 
             int documentSize = 0; // Количество строк
-            int[] heightRanges = new int[documentSize];; // Общее количество диапазонов
+            int[] heightRanges = new int[documentSize];
+            ; // Общее количество диапазонов
             int rangeStart = 51; // Первая строка
             int rowHeight = 40; // Высота строк
 
@@ -77,7 +86,7 @@ public class SVGService {
                             Element textElement = (Element) textList.item(0);
                             String textTransform = textElement.getAttribute("transform");
                             String[] transformContent = textTransform.split("\\s+");
-                            if(transformContent[0].equals("rotate(0")) {
+                            if (transformContent[0].equals("rotate(0")) {
                                 documentSize++;
                             }
                         }
@@ -301,10 +310,7 @@ public class SVGService {
                                 heightRangesMap.get(range).addAction(ActionType.TRAIN_SECURING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                             }
                         }
-                    }
-
-
-                    else if (ellipseList.getLength() == 1 && gChildNodeCount == 1) {
+                    } else if (ellipseList.getLength() == 1 && gChildNodeCount == 1) {
                         Element ellipseElement = (Element) ellipseList.item(0);
                         String pathFill = ellipseElement.getAttribute("fill");
                         String yAttribute = ellipseElement.getAttribute("cy");
@@ -330,7 +336,7 @@ public class SVGService {
                     } // тут продлить, чтобы обработать g
 
 
-                // если это не g, например ожидание находится вне g
+                    // если это не g, например ожидание находится вне g
                 } else if (currentElement.getTagName().equals("clipPath")) { // если это не g, например ожидание находится вне g
                     assert previousElement != null;
                     if (previousElement.getTagName().equals("rect") && nextElement.getTagName().equals("path")) {
@@ -344,29 +350,28 @@ public class SVGService {
                             if (elementY >= range && elementY <= range + 39) {// определение в диапазон по высоте
                                 switch (rectFill) {
                                     case "#FFFFFF":
-                                        heightRangesMap.get(range).addAction(ActionType.IDLE_TIME, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.IDLE_TIME, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     case "#F08080":
-                                        heightRangesMap.get(range).addAction(ActionType.MOVEMENT_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.MOVEMENT_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     case "#DEB887":
-                                        heightRangesMap.get(range).addAction(ActionType.SLOT_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.SLOT_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     case "#FFD700":
-                                        heightRangesMap.get(range).addAction(ActionType.CREW_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.CREW_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     case "#90EE90":
-                                        heightRangesMap.get(range).addAction(ActionType.TRAIN_LOCOMOTIVE_ENTRY, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.TRAIN_LOCOMOTIVE_ENTRY, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     case "#FFC0CB":
-                                        heightRangesMap.get(range).addAction(ActionType.DISSOLUTION_PERMISSION_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.DISSOLUTION_PERMISSION_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                 }
                             }
                         }
                     }
-                }
-                else if (currentElement.getTagName().equals("text")) {
+                } else if (currentElement.getTagName().equals("text")) {
                     // Добавляем текстовое значение в буфер
                     textBuffer.add(currentElement.getTextContent());
                 } else if (currentElement.getTagName().equals("path")) {
@@ -435,18 +440,22 @@ public class SVGService {
                                             double startX = changePoints.get(j).x;
                                             double nextX = changePoints.get(j + 1).x;
                                             String textValue = relevantTexts.get(j);
-
-                                            heightRangesMap.get(range).addAction(
-                                                    ActionType.ACCUMULATION,
-                                                    calculateTime(startX),
-                                                    calculateTime(nextX),
-                                                    calculateTimeDuration(startX, nextX),
-                                                    textValue
-                                            );
+                                            if(nextX>START_X_FROM_0&&nextX<END_X) {
+                                                startX = Math.max(startX, START_X_FROM_0);
+                                                nextX = Math.min(nextX, END_X);
+                                                heightRangesMap.get(range).addAction(
+                                                        ActionType.ACCUMULATION,
+                                                        calculateTime(startX),
+                                                        calculateTime(nextX),
+                                                        calculateTimeDuration(startX, nextX),
+                                                        textValue
+                                                );
+                                            }
                                         }
                                     }
                                 }
                             }
+
 
                             // Удаляем из буфера количество текстов, которые были обработаны
                             for (int i = 0; i < changePointsCount; i++) {
@@ -459,12 +468,10 @@ public class SVGService {
                 }
 
 
-
                 // TODO: Остальные фигуры
 
             }
 
-            // Вывод информации о каждом диапазоне и действиях в нём
             //TODO: Костыли!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
             int key;
@@ -472,32 +479,41 @@ public class SVGService {
                 key = rangeStart + i * 40;
                 HeightRange value = heightRangesMap.get(key);
                 value.numberActionsByStart();
-                if (startTime != 0){
+                if (startTime != 0) {
                     value.adjustTimes(startTime * 60 * 60 * 1000);
                 }
             }
-
-            LinkedHashMap<String, HeightRange> stringHeightRangeHashMap = new LinkedHashMap<>();
-            for (Map.Entry<Integer, HeightRange> entry : heightRangesMap.entrySet()) {
-                HeightRange range = entry.getValue();
-                stringHeightRangeHashMap.put(range.getName(), entry.getValue());
-            }
-
-            return stringHeightRangeHashMap;
+            return convertMapKeyToString(heightRangesMap);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
 
+    public static LinkedHashMap<String, HeightRange> convertMapKeyToString(Map<Integer, HeightRange> heightRangesMap) {
+        LinkedHashMap<String, HeightRange> stringHeightRangeHashMap = new LinkedHashMap<>();
+        for (Map.Entry<Integer, HeightRange> entry : heightRangesMap.entrySet()) {
+            HeightRange range = entry.getValue();
+            stringHeightRangeHashMap.put(range.getName(), entry.getValue());
+        }
+        return stringHeightRangeHashMap;
+    }
+
     // Метод для подсчёта времени по x в миллисекундах
     public static int calculateTime(double x) {
-        x = x - 250; // ноль находится на 250
-        return (int) (x / 180 * 60 * 60 * 1000); // в часу 180
+        if (x < START_X_FROM_0) {
+            return 0;
+        } else {
+            x = Math.min(x, END_X);
+            x = x - START_X_FROM_0; // ноль находится на 250
+            return (int) (x / 180 * 60 * 60 * 1000); // в часу 180
+        }
     }
 
     // Метод для подсчёта продолжительности в минутах по двум координатам в миллисекундах
     public static int calculateTimeDuration(double elementStartX, double elementEndX) {
+        elementStartX = Math.max(elementStartX, START_X_FROM_0);
+        elementEndX = Math.min(elementEndX, END_X);
         return (int) ((elementEndX - elementStartX) / 180 * 60 * 60 * 1000);
     }
 
@@ -505,5 +521,4 @@ public class SVGService {
     public static int calculateTimeDuration(double elementWidth) {
         return (int) (elementWidth / 180 * 60 * 60 * 1000); // в часу 180
     }
-
 }

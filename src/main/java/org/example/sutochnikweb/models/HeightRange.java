@@ -14,6 +14,11 @@ public class HeightRange {
         this.actions = new ArrayList<>();
     }
 
+    public HeightRange(String name, List<Action> actions) {
+        this.name = name;
+        this.actions = actions;
+    }
+
     public void addAction(ActionType type, int start, int end, int duration) {
         actions.add(new Action(type, start, end, duration));
     }
@@ -51,5 +56,13 @@ public class HeightRange {
         for (Action action : actions) {
             action.adjustTimes(startTime);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "HeightRange{" +
+                "name='" + name + '\'' +
+                ", actions=" + actions +
+                '}';
     }
 }
