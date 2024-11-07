@@ -54,8 +54,7 @@ public class SVGService {
             Element nextElement = iterator.next();
 
             int documentSize = 0; // Количество строк
-            int[] heightRanges = new int[documentSize];
-            ; // Общее количество диапазонов
+            int[] heightRanges = new int[documentSize];; // Общее количество диапазонов
             int rangeStart = 51; // Первая строка
             int rowHeight = 40; // Высота строк
 
@@ -86,7 +85,7 @@ public class SVGService {
                             Element textElement = (Element) textList.item(0);
                             String textTransform = textElement.getAttribute("transform");
                             String[] transformContent = textTransform.split("\\s+");
-                            if (transformContent[0].equals("rotate(0")) {
+                            if(transformContent[0].equals("rotate(0")) {
                                 documentSize++;
                             }
                         }
@@ -268,6 +267,10 @@ public class SVGService {
                                         heightRangesMap.get(range).addAction(ActionType.SHUNTING_LOCOMOTIVE_DETACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                                         break;
                                     }
+                                } else if (lineList.getLength() == 1 && gChildNodeCount == 3 && textList.getLength() == 1) {
+                                    if (elementText.equals("Г")) {
+                                        heightRangesMap.get(range).addAction(ActionType.HUMP_LOCOMOTIVE_ATTACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                    }
                                 }
                                 if (pathList.getLength() == 1 && gChildNodeCount == 2) { // прямоугольник с треугольником
                                     Element pathElement = (Element) pathList.item(0);
@@ -310,7 +313,10 @@ public class SVGService {
                                 heightRangesMap.get(range).addAction(ActionType.TRAIN_SECURING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                             }
                         }
-                    } else if (ellipseList.getLength() == 1 && gChildNodeCount == 1) {
+                    }
+
+
+                    else if (ellipseList.getLength() == 1 && gChildNodeCount == 1) {
                         Element ellipseElement = (Element) ellipseList.item(0);
                         String pathFill = ellipseElement.getAttribute("fill");
                         String yAttribute = ellipseElement.getAttribute("cy");
@@ -336,7 +342,7 @@ public class SVGService {
                     } // тут продлить, чтобы обработать g
 
 
-                    // если это не g, например ожидание находится вне g
+                // если это не g, например ожидание находится вне g
                 } else if (currentElement.getTagName().equals("clipPath")) { // если это не g, например ожидание находится вне g
                     assert previousElement != null;
                     if (previousElement.getTagName().equals("rect") && nextElement.getTagName().equals("path")) {
@@ -371,7 +377,8 @@ public class SVGService {
                             }
                         }
                     }
-                } else if (currentElement.getTagName().equals("text")) {
+                }
+                else if (currentElement.getTagName().equals("text")) {
                     // Добавляем текстовое значение в буфер
                     textBuffer.add(currentElement.getTextContent());
                 } else if (currentElement.getTagName().equals("path")) {
@@ -456,7 +463,6 @@ public class SVGService {
                                 }
                             }
 
-
                             // Удаляем из буфера количество текстов, которые были обработаны
                             for (int i = 0; i < changePointsCount; i++) {
                                 if (!textBuffer.isEmpty()) {
@@ -468,10 +474,12 @@ public class SVGService {
                 }
 
 
+
                 // TODO: Остальные фигуры
 
             }
 
+            // Вывод информации о каждом диапазоне и действиях в нём
             //TODO: Костыли!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
             int key;
@@ -521,4 +529,5 @@ public class SVGService {
     public static int calculateTimeDuration(double elementWidth) {
         return (int) (elementWidth / 180 * 60 * 60 * 1000); // в часу 180
     }
+
 }

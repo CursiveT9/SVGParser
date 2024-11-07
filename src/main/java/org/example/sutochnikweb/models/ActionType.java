@@ -25,6 +25,7 @@ public enum ActionType {
     SHUNTING_LOCOMOTIVE_DETACHMENT("Отцепка маневрового локомотива"),
     SHUNTING_LOCOMOTIVE_ATTACHMENT("Прицепка маневрового локомотива"),
     TRAIN_LOCOMOTIVE_ATTACHMENT("Прицепка поездного локомотива"),
+    HUMP_LOCOMOTIVE_ATTACHMENT("Прицепка горочного локомотива для надвига"),
     TRAIN_PRESENTATION("Предъявление состава"),
     TRAIN_HANDOVER("Отдача состава"),
     IDLE_TIME("Простой"),
