@@ -259,6 +259,10 @@ public class SVGService {
                                         heightRangesMap.get(range).addAction(ActionType.SHUNTING_LOCOMOTIVE_DETACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                                         break;
                                     }
+                                } else if (lineList.getLength() == 1 && gChildNodeCount == 3 && textList.getLength() == 1) {
+                                    if (elementText.equals("Г")) {
+                                        heightRangesMap.get(range).addAction(ActionType.HUMP_LOCOMOTIVE_ATTACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                    }
                                 }
                                 if (pathList.getLength() == 1 && gChildNodeCount == 2) { // прямоугольник с треугольником
                                     Element pathElement = (Element) pathList.item(0);
@@ -481,6 +485,14 @@ public class SVGService {
             for (Map.Entry<Integer, HeightRange> entry : heightRangesMap.entrySet()) {
                 HeightRange range = entry.getValue();
                 stringHeightRangeHashMap.put(range.getName(), entry.getValue());
+            }
+
+            for (Map.Entry<String, HeightRange> entry : stringHeightRangeHashMap.entrySet()) {
+                HeightRange range = entry.getValue();
+                System.out.println("Диапазон " + " имеет название: " + range.getName());
+                for (Action action : range.getActions()) {
+                    System.out.println(action);
+                }
             }
 
             return stringHeightRangeHashMap;
