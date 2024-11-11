@@ -67,9 +67,11 @@ public class TransitTrainsService {
 
                         // Завершаем пару, если находим TRAIN_DEPARTURE
                         if (currentAction.getType() == ActionType.TRAIN_DEPARTURE) {
-                            pairsForCurrentRange.add(new ArrayList<>(actionListAfterTrain_ARRIVAL));
-                            actionListAfterTrain_ARRIVAL.clear();
-                            trainArrivalFound = false;
+                            if(actionListAfterTrain_ARRIVAL.size()>2) {
+                                pairsForCurrentRange.add(new ArrayList<>(actionListAfterTrain_ARRIVAL));
+                                actionListAfterTrain_ARRIVAL.clear();
+                                trainArrivalFound = false;
+                            }
                         }
                     }
                 }
