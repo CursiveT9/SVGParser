@@ -436,7 +436,6 @@ public class SVGService {
                             }
 
                             int changePointsCount = changePoints.size();
-                            if (textBuffer.size() >= changePointsCount) {
                                 List<String> relevantTexts = textBuffer.subList(textBuffer.size() - changePointsCount+1, textBuffer.size());
 
                                 elementY = (int) Math.round(pathData.getStartPoint().y);
@@ -446,8 +445,8 @@ public class SVGService {
                                         for (int j = 0; j < changePoints.size()-1; j++) {
                                             double startX = changePoints.get(j).x;
                                             double nextX = changePoints.get(j + 1).x;
-                                            String textValue = relevantTexts.get(j);
-                                            if(nextX>START_X_FROM_0&&nextX<END_X) {
+                                            int textValue = Integer.parseInt(relevantTexts.get(j));
+                                            if(nextX>START_X_FROM_0&&startX<END_X) {
                                                 startX = Math.max(startX, START_X_FROM_0);
                                                 nextX = Math.min(nextX, END_X);
                                                 heightRangesMap.get(range).addAction(
@@ -461,7 +460,7 @@ public class SVGService {
                                         }
                                     }
                                 }
-                            }
+
 
                             // Удаляем из буфера количество текстов, которые были обработаны
                             for (int i = 0; i < changePointsCount; i++) {

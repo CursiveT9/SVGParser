@@ -39,20 +39,22 @@ public class SimpleExcelService {
             List<Action> actions = heightRange.getActions();
 
                 for (Action action : actions) {
-                    Row row = sheet.createRow(rowNum++);
+                    if(action.getDuration()>0) {//Костыль, не знаю, как пофиксить
 
-                    Cell cell = row.createCell(0);
-                    cell.setCellValue(key);
-                    row.createCell(1).setCellValue(action.getOperationNumber());
-                    row.createCell(2).setCellValue(action.getType().getDescription());
-                    row.createCell(3).setCellValue(timeService.convertMillisToTime(action.getStart()));
-                    row.createCell(4).setCellValue(timeService.convertMillisToTime(action.getEnd()));
-                    row.createCell(5).setCellValue(timeService.convertMillisToTime(action.getDuration()));
-                    if (action.getOtherNumInfo() != 0) {
-                        row.createCell(6).setCellValue(action.getOtherNumInfo());
-                    } else
-                        row.createCell(6).setCellValue(action.getOtherInfo());
+                        Row row = sheet.createRow(rowNum++);
 
+                        Cell cell = row.createCell(0);
+                        cell.setCellValue(key);
+                        row.createCell(1).setCellValue(action.getOperationNumber());
+                        row.createCell(2).setCellValue(action.getType().getDescription());
+                        row.createCell(3).setCellValue(timeService.convertMillisToTime(action.getStart()));
+                        row.createCell(4).setCellValue(timeService.convertMillisToTime(action.getEnd()));
+                        row.createCell(5).setCellValue(timeService.convertMillisToTime(action.getDuration()));
+                        if (action.getOtherNumInfo() != 0) {
+                            row.createCell(6).setCellValue(action.getOtherNumInfo());
+                        } else
+                            row.createCell(6).setCellValue(action.getOtherInfo());
+                    }
                 }
         }
 
