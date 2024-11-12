@@ -84,18 +84,18 @@ public class TransitTrainsService {
         }
 
         // Вывод результата
-        for (Map.Entry<String, List<List<Action>>> entry : actionPairsMap.entrySet()) {
-            System.out.println("For name: " + entry.getKey());
-            for (List<Action> actionPair : entry.getValue()) {
-                System.out.println("TRAIN_ARRIVAL -> TRAIN_DEPARTURE pair found:");
-                for (Action action : actionPair) {
-                    System.out.println(action.getType() + " " +
-                            timeService.convertMillisToTime(action.getStart()) + " " +
-                            timeService.convertMillisToTime(action.getEnd()));
-                }
-                System.out.println();
-            }
-        }
+//        for (Map.Entry<String, List<List<Action>>> entry : actionPairsMap.entrySet()) {
+//            System.out.println("For name: " + entry.getKey());
+//            for (List<Action> actionPair : entry.getValue()) {
+//                System.out.println("TRAIN_ARRIVAL -> TRAIN_DEPARTURE pair found:");
+//                for (Action action : actionPair) {
+//                    System.out.println(action.getType() + " " +
+//                            timeService.convertMillisToTime(action.getStart()) + " " +
+//                            timeService.convertMillisToTime(action.getEnd()));
+//                }
+//                System.out.println();
+//            }
+//        }
     }
 
 

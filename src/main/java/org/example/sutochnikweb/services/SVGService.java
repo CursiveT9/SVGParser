@@ -74,7 +74,7 @@ public class SVGService {
                     NodeList childTextList = gElement.getElementsByTagName("text");
                     Element textElement = (Element) childTextList.item(0);
                     startTime = Integer.parseInt(textElement.getTextContent());
-                    System.out.println("Начало суточника в " + startTime + " часов");
+                    // System.out.println("Начало суточника в " + startTime + " часов");
                 }
                 if ("DailyDiagramCaptionView".equals(gId)) {
                     NodeList childGList = gElement.getElementsByTagName("g");
@@ -94,14 +94,31 @@ public class SVGService {
                     for (int k = 0; k < heightRanges.length; k++) {
                         heightRanges[k] = rangeStart + (k * rowHeight);
                     }
-                    for (int j = 0; j < childGList.getLength(); j++) { // заполняем диапазоны именами, строки, повёрнутые на 90 градусов, сначала записываются в диапазон, так как в документе раньше написаны, но потом они перезаписываются нормальной строкой, так что всё норм
+                    double nameCount = 0; // счетчик, использкую для корректировки названий(добавляем названия, повёрнутые на 90 градусов к обычным)
+                    String rotateName = ""; // повернутое название
+                    for (int j = 0; j < childGList.getLength(); j++) {
                         Element childGElement = (Element) childGList.item(j);
                         NodeList textList = childGElement.getElementsByTagName("text");
                         if (textList.getLength() > 0) {
                             Element textElement = (Element) textList.item(0);
                             String textContent = textElement.getTextContent().trim();
+                            if (nameCount >= 1){
+                                nameCount -= 1;
+                                textContent = rotateName + " - " + textContent;
+                            }
                             String textY = textElement.getAttribute("y");
                             double textYValue = Double.parseDouble(textY);
+                            String textTransform = textElement.getAttribute("transform");
+                            String[] transformContent = textTransform.split("\\s+");
+                            if(transformContent[0].equals("rotate(-90")) {
+                                NodeList rectList = childGElement.getElementsByTagName("rect");
+                                Element rectElement = (Element) rectList.item(0);
+                                String nameHeight = rectElement.getAttribute("height");
+                                double nameHeightValue = Double.parseDouble(nameHeight);
+                                nameCount = nameHeightValue/40;
+                                rotateName = textContent;
+                                continue;
+                            }
                             // Находим соответствующий диапазон высоты
                             for (int k = 0; k < heightRanges.length; k++) {
                                 int range = heightRanges[k];
@@ -225,8 +242,12 @@ public class SVGService {
                                     double firstLineY1Attribute = Double.parseDouble(firstLineElement.getAttribute("y1"));
                                     Element secondLineElement = (Element) lineList.item(1);
                                     String secondLineX1Attribute = secondLineElement.getAttribute("x1");
+                                    String secondLineX2Attribute = secondLineElement.getAttribute("x2");
                                     double secondLineY1Attribute = Double.parseDouble(secondLineElement.getAttribute("y1"));
-                                    if (firstLineX1Attribute.equals(secondLineX1Attribute)) { // крест X
+                                    if (secondLineX1Attribute.equals(secondLineX2Attribute)) { // крест -|
+                                        heightRangesMap.get(range).addAction(ActionType.TRAIN_DISSOLUTION, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        break;
+                                    } else if (firstLineX1Attribute.equals(secondLineX1Attribute)) { // крест X
                                         heightRangesMap.get(range).addAction(ActionType.SHUNTING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                                         break;
                                     } else if (firstLineY1Attribute < secondLineY1Attribute) { // V
@@ -356,22 +377,22 @@ public class SVGService {
                             if (elementY >= range && elementY <= range + 39) {// определение в диапазон по высоте
                                 switch (rectFill) {
                                     case "#FFFFFF":
-                                        heightRangesMap.get(range).addAction(ActionType.IDLE_TIME, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
+                                        heightRangesMap.get(range).addAction(ActionType.IDLE_TIME, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                                         break;
                                     case "#F08080":
-                                        heightRangesMap.get(range).addAction(ActionType.MOVEMENT_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
+                                        heightRangesMap.get(range).addAction(ActionType.MOVEMENT_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                                         break;
                                     case "#DEB887":
-                                        heightRangesMap.get(range).addAction(ActionType.SLOT_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
+                                        heightRangesMap.get(range).addAction(ActionType.SLOT_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                                         break;
                                     case "#FFD700":
-                                        heightRangesMap.get(range).addAction(ActionType.CREW_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
+                                        heightRangesMap.get(range).addAction(ActionType.CREW_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                                         break;
                                     case "#90EE90":
-                                        heightRangesMap.get(range).addAction(ActionType.TRAIN_LOCOMOTIVE_ENTRY, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
+                                        heightRangesMap.get(range).addAction(ActionType.TRAIN_LOCOMOTIVE_ENTRY, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                                         break;
                                     case "#FFC0CB":
-                                        heightRangesMap.get(range).addAction(ActionType.DISSOLUTION_PERMISSION_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
+                                        heightRangesMap.get(range).addAction(ActionType.DISSOLUTION_PERMISSION_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
                                         break;
                                 }
                             }
@@ -501,8 +522,24 @@ public class SVGService {
         LinkedHashMap<String, HeightRange> stringHeightRangeHashMap = new LinkedHashMap<>();
         for (Map.Entry<Integer, HeightRange> entry : heightRangesMap.entrySet()) {
             HeightRange range = entry.getValue();
-            stringHeightRangeHashMap.put(range.getName(), entry.getValue());
+            String originalName = range.getName();
+            String name = originalName;
+            int counter = 1;
+            // Проверяем, существует ли ключ с таким именем
+            while (stringHeightRangeHashMap.containsKey(name)) { // Если существует, добавляем к имени суффикс
+                name = originalName + "_" + counter;
+                counter++;
+            }
+            stringHeightRangeHashMap.put(name, range);
         }
+        //вывод для отладки
+//        for (Map.Entry<String, HeightRange> entry : stringHeightRangeHashMap.entrySet()) {
+//            HeightRange range = entry.getValue();
+//            System.out.println("Диапазон " + " имеет название: " + range.getName());
+//            for (Action action : range.getActions()) {
+//                System.out.println(action);
+//            }
+//        }
         return stringHeightRangeHashMap;
     }
 
