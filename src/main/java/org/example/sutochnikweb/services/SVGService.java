@@ -227,14 +227,14 @@ public class SVGService {
                         for (int range : heightRanges) { // определение в диапазон по высоте
                             if (elementY >= range && elementY <= range + 39) { // определение в диапазон по высоте
                                 if (gChildNodeCount == 1) {
-                                    heightRangesMap.get(range).addAction(ActionType.TRAIN_INSPECTION_STOP, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                    heightRangesMap.get(range).addAction(ActionType.TRAIN_INSPECTION_STOP, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                     break;
                                 } else if (gChildNodeCount == 2 && textList.getLength() == 1) {
-                                    heightRangesMap.get(range).addAction(ActionType.TRAIN_INSPECTION_STOP, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth), elementText);
+                                    heightRangesMap.get(range).addAction(ActionType.TRAIN_INSPECTION_STOP, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX), elementText);
                                     break;
                                 }
                                 if (lineList.getLength() == 3) { // прямоугольник с 3 линиями ≡
-                                    heightRangesMap.get(range).addAction(ActionType.ADVANCEMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                    heightRangesMap.get(range).addAction(ActionType.ADVANCEMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                     break;
                                 } else if (lineList.getLength() == 2) { // прямоугольник с 2 линиями
                                     Element firstLineElement = (Element) lineList.item(0);
@@ -245,32 +245,32 @@ public class SVGService {
                                     String secondLineX2Attribute = secondLineElement.getAttribute("x2");
                                     double secondLineY1Attribute = Double.parseDouble(secondLineElement.getAttribute("y1"));
                                     if (secondLineX1Attribute.equals(secondLineX2Attribute)) { // крест -|
-                                        heightRangesMap.get(range).addAction(ActionType.TRAIN_DISSOLUTION, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.TRAIN_DISSOLUTION, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     } else if (firstLineX1Attribute.equals(secondLineX1Attribute)) { // крест X
-                                        heightRangesMap.get(range).addAction(ActionType.SHUNTING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.SHUNTING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     } else if (firstLineY1Attribute < secondLineY1Attribute) { // V
-                                        heightRangesMap.get(range).addAction(ActionType.LOCOMOTIVE_CLEANING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.LOCOMOTIVE_CLEANING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     } else if (firstLineY1Attribute > secondLineY1Attribute) { // ^
-                                        heightRangesMap.get(range).addAction(ActionType.LOCOMOTIVE_PROVISION, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.LOCOMOTIVE_PROVISION, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     }
                                 } else if (lineList.getLength() == 1 && pathList.getLength() == 1 && gChildNodeCount == 3) { // прямоугольник со стрелкой
                                     Element firstLineElement = (Element) lineList.item(0);
                                     double firstLineY1Attribute = Double.parseDouble(firstLineElement.getAttribute("y1"));
                                     if (firstLineY1Attribute > Double.parseDouble(yAttribute)) { // стрелка вверх
-                                        heightRangesMap.get(range).addAction(ActionType.SIDETRACK_PROVISION, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.SIDETRACK_PROVISION, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     } else if (firstLineY1Attribute == Double.parseDouble(yAttribute)) { // стрелка вниз
                                         Element firstPathElement = (Element) pathList.item(0);
                                         String dAttribute = firstPathElement.getAttribute("d");
                                         String[] commands = dAttribute.split("\\s+");
                                         if (commands[1].equals(commands[4])) {
-                                            heightRangesMap.get(range).addAction(ActionType.CAR_DETACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                            heightRangesMap.get(range).addAction(ActionType.CAR_DETACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         } else {
-                                            heightRangesMap.get(range).addAction(ActionType.SIDETRACK_CLEANING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                            heightRangesMap.get(range).addAction(ActionType.SIDETRACK_CLEANING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         }
                                         break;
                                     }
@@ -279,18 +279,18 @@ public class SVGService {
                                     double firstLineY1Attribute = Double.parseDouble(firstLineElement.getAttribute("y1"));
                                     double firstLineY2Attribute = Double.parseDouble(firstLineElement.getAttribute("y2"));
                                     if (firstLineY1Attribute == firstLineY2Attribute) { // прямая линия
-                                        heightRangesMap.get(range).addAction(ActionType.BRAKE_TESTING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.BRAKE_TESTING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     } else if (firstLineY1Attribute > firstLineY2Attribute) { // прямоугольник с линией идущей снизу вверх
-                                        heightRangesMap.get(range).addAction(ActionType.SHUNTING_LOCOMOTIVE_ATTACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.SHUNTING_LOCOMOTIVE_ATTACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     } else if (firstLineY1Attribute < firstLineY2Attribute) { // прямоугольник с линией идущей сверху вниз
-                                        heightRangesMap.get(range).addAction(ActionType.SHUNTING_LOCOMOTIVE_DETACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.SHUNTING_LOCOMOTIVE_DETACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     }
                                 } else if (lineList.getLength() == 1 && gChildNodeCount == 3 && textList.getLength() == 1) {
                                     if (elementText.equals("Г")) {
-                                        heightRangesMap.get(range).addAction(ActionType.HUMP_LOCOMOTIVE_ATTACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.HUMP_LOCOMOTIVE_ATTACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                     }
                                 }
                                 if (pathList.getLength() == 1 && gChildNodeCount == 2) { // прямоугольник с треугольником
@@ -317,7 +317,7 @@ public class SVGService {
                                     break;
                                 }
                                 if (ellipseList.getLength() == 1 && gChildNodeCount == 2) { // o
-                                    heightRangesMap.get(range).addAction(ActionType.LOCOMOTIVE_MOVEMENT_RESERVE, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                    heightRangesMap.get(range).addAction(ActionType.LOCOMOTIVE_MOVEMENT_RESERVE, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                     break;
                                 }
                             }
@@ -331,7 +331,7 @@ public class SVGService {
                         elementY = Integer.parseInt(yAttribute);
                         for (int range : heightRanges) { // определение в диапазон по высоте
                             if (elementY >= range && elementY <= range + 39) {
-                                heightRangesMap.get(range).addAction(ActionType.TRAIN_SECURING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                heightRangesMap.get(range).addAction(ActionType.TRAIN_SECURING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                             }
                         }
                     }
@@ -352,10 +352,10 @@ public class SVGService {
                         for (int range : heightRanges) { // определение в диапазон по высоте
                             if (elementY >= range && elementY <= range + 39) {
                                 if (pathFill.equals("#FF0000")) { // красный круг
-                                    heightRangesMap.get(range).addAction(ActionType.TRAIN_PRESENTATION, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                    heightRangesMap.get(range).addAction(ActionType.TRAIN_PRESENTATION, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                     break;
                                 } else if (pathFill.equals("#000000")) { // черный круг
-                                    heightRangesMap.get(range).addAction(ActionType.TRAIN_HANDOVER, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                    heightRangesMap.get(range).addAction(ActionType.TRAIN_HANDOVER, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                     break;
                                 }
                             }
@@ -377,22 +377,22 @@ public class SVGService {
                             if (elementY >= range && elementY <= range + 39) {// определение в диапазон по высоте
                                 switch (rectFill) {
                                     case "#FFFFFF":
-                                        heightRangesMap.get(range).addAction(ActionType.IDLE_TIME, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.IDLE_TIME, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     case "#F08080":
-                                        heightRangesMap.get(range).addAction(ActionType.MOVEMENT_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.MOVEMENT_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     case "#DEB887":
-                                        heightRangesMap.get(range).addAction(ActionType.SLOT_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.SLOT_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     case "#FFD700":
-                                        heightRangesMap.get(range).addAction(ActionType.CREW_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.CREW_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     case "#90EE90":
-                                        heightRangesMap.get(range).addAction(ActionType.TRAIN_LOCOMOTIVE_ENTRY, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.TRAIN_LOCOMOTIVE_ENTRY, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     case "#FFC0CB":
-                                        heightRangesMap.get(range).addAction(ActionType.DISSOLUTION_PERMISSION_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementWidth));
+                                        heightRangesMap.get(range).addAction(ActionType.DISSOLUTION_PERMISSION_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                 }
                             }
