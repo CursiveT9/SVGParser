@@ -1,6 +1,7 @@
 package org.example.sutochnikweb.controllers;
 
 import org.apache.poi.ss.usermodel.*;
+import org.example.sutochnikweb.models.Action;
 import org.example.sutochnikweb.models.ExcelPreview;
 import org.example.sutochnikweb.models.HeightRange;
 import org.example.sutochnikweb.models.OperationStats;
@@ -36,16 +37,18 @@ public class MainController {
     private UtilService utilService;
 
     private TransitTrainsService transitTrainsService;
+    private TrainsWithOvertimeService trainsWithOvertimeService;
 
     private byte[] excelBytes;
 
 
-    public MainController(SimpleExcelService excelService, SVGService svgService, TimeService timeService, UtilService utilService, TransitTrainsService transitTrainsService) {
+    public MainController(SimpleExcelService excelService, SVGService svgService, TimeService timeService, UtilService utilService, TransitTrainsService transitTrainsService, TrainsWithOvertimeService trainsWithOvertimeService) {
         this.excelService = excelService;
         this.svgService = svgService;
         this.timeService = timeService;
         this.utilService = utilService;
         this.transitTrainsService = transitTrainsService;
+        this.trainsWithOvertimeService = trainsWithOvertimeService;
     }
 
     @GetMapping("/")
@@ -75,6 +78,8 @@ public class MainController {
 
             Map<String, HeightRange> map = svgService.parseSvg(tempFile);
             transitTrainsService.findActionPairs(map);//Убрать, нужно для вывода в консоль для теста транзитных поездов
+            Map<String, List<List<Action>>> trainsWithOvertimeMap = trainsWithOvertimeService.findTrainsWithOvertime(map); //Запускает метод, который полностью считает поезда с переработкой и запписывает в мапу название пути, список поездов состоящих из списка операций
+
             Workbook excelFile = excelService.convertToExcel(map);
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();

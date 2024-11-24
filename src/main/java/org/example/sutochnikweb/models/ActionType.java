@@ -35,7 +35,6 @@ public enum ActionType {
     TRAIN_LOCOMOTIVE_ENTRY("Заезд поездного локомотива"),
     TRAIN_DISSOLUTION("Роспуск состава"),
     SHUNTING_LOCOMOTIVE_RECOUPLING("Перецепка маневрового локомотива"),
-    HUMP_LOCOMOTIVE_ATTACHMENT_FOR_ADVANCEMENT("Прицепка горочного локомотива для надвига"),
     CAR_PUSHBACK("Осаживание вагонов"),
     DISSOLUTION_PERMISSION_WAIT("Ожидание разрешения на роспуск"),
     ACCUMULATION("Накопление");

@@ -35,6 +35,10 @@ public class HeightRange {
         actions.add(new Action(type, start, end, duration, otherNumInfo, otherInfo));
     }
 
+    public void addAction(ActionType type, int start, int end, int duration, boolean completed) {
+        actions.add(new Action(type, start, end, duration, completed));
+    }
+
     public String getName() {
         return name;
     }

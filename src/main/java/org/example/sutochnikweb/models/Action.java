@@ -9,14 +9,24 @@ public class Action {
     private int operationNumber;
     private final int otherNumInfo;
     private final String otherInfo;
+    private boolean completed;
 
-    public Action(ActionType type, int start, int end, int duration, int otherNumInfo, String otherInfo) {
+    public Action(ActionType type, int start, int end, int duration, int otherNumInfo, String otherInfo, boolean completed) {
         this.type = type;
         this.start = start;
         this.end = end;
         this.duration = duration;
         this.otherNumInfo = otherNumInfo;
         this.otherInfo = otherInfo;
+        this.completed = completed;
+    }
+
+    public Action(ActionType type, int start, int end, int duration, int otherNumInfo, String otherInfo) {
+        this(type, start, end, duration, otherNumInfo, otherInfo, true);
+    }
+
+    public Action(ActionType type, int start, int end, int duration, boolean completed) {
+        this(type, start, end, duration, 0, "", completed);
     }
 
     public Action(ActionType type, int start, int end, int duration) {
@@ -59,8 +69,16 @@ public class Action {
         return otherInfo;
     }
 
+    public boolean getCompleted() {
+        return completed;
+    }
+
     public void setOperationNumber(int operationNumber) {
         this.operationNumber = operationNumber;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
     }
 
     public void adjustTimes(int startTimeInMillis) {

@@ -66,6 +66,7 @@ public class SVGService {
             String elementText;
             int elementY = 0; // высота элемента для дальнейшего определения его в диапазон
             int startTime = 0;
+            boolean isCompleted = true; // флаг полупрозрачных, незавершенных операций
 
             for (int i = 0; i < gList.getLength(); i++) { // первый прогон для определения размера файла и именования диапазонов
                 Element gElement = (Element) gList.item(i);
@@ -365,6 +366,7 @@ public class SVGService {
 
                 // если это не g, например ожидание находится вне g
                 } else if (currentElement.getTagName().equals("clipPath")) { // если это не g, например ожидание находится вне g
+                    isCompleted = true;
                     assert previousElement != null;
                     if (previousElement.getTagName().equals("rect") && nextElement.getTagName().equals("path")) {
                         String rectFill = previousElement.getAttribute("fill");
@@ -373,26 +375,30 @@ public class SVGService {
                         elementEndX = elementStartX + elementWidth;
                         String yAttribute = previousElement.getAttribute("y");
                         elementY = Integer.parseInt(yAttribute);
+                        String fillOpacity = previousElement.getAttribute("fill-opacity");
+                        if (fillOpacity.equals("0.2")) { // если прозрачность прямоугольника 0.2, то операция не завершена
+                            isCompleted = false;
+                        }
                         for (int range : heightRanges) { // определение в диапазон по высоте
                             if (elementY >= range && elementY <= range + 39) {// определение в диапазон по высоте
                                 switch (rectFill) {
                                     case "#FFFFFF":
-                                        heightRangesMap.get(range).addAction(ActionType.IDLE_TIME, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
+                                        heightRangesMap.get(range).addAction(ActionType.IDLE_TIME, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX), isCompleted);
                                         break;
                                     case "#F08080":
-                                        heightRangesMap.get(range).addAction(ActionType.MOVEMENT_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
+                                        heightRangesMap.get(range).addAction(ActionType.MOVEMENT_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX), isCompleted);
                                         break;
                                     case "#DEB887":
-                                        heightRangesMap.get(range).addAction(ActionType.SLOT_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
+                                        heightRangesMap.get(range).addAction(ActionType.SLOT_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX), isCompleted);
                                         break;
                                     case "#FFD700":
-                                        heightRangesMap.get(range).addAction(ActionType.CREW_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
+                                        heightRangesMap.get(range).addAction(ActionType.CREW_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX), isCompleted);
                                         break;
                                     case "#90EE90":
-                                        heightRangesMap.get(range).addAction(ActionType.TRAIN_LOCOMOTIVE_ENTRY, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
+                                        heightRangesMap.get(range).addAction(ActionType.TRAIN_LOCOMOTIVE_ENTRY, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX), isCompleted);
                                         break;
                                     case "#FFC0CB":
-                                        heightRangesMap.get(range).addAction(ActionType.DISSOLUTION_PERMISSION_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
+                                        heightRangesMap.get(range).addAction(ActionType.DISSOLUTION_PERMISSION_WAIT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX), isCompleted);
                                         break;
                                 }
                             }
