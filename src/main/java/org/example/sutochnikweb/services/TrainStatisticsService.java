@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+//Обработка времён транзитных и с переработкой
 @Service
 public class TrainStatisticsService {
     public TrainStatistics calculateTrainStatistics(Map<String, List<List<Action>>> trainMap, TimeService timeService) {
@@ -17,7 +18,7 @@ public class TrainStatisticsService {
         for (List<List<Action>> actionGroups : trainMap.values()) {
             for (List<Action> actions : actionGroups) {
                 if (!actions.isEmpty()) {
-                    totalTrains++;
+                    totalTrains++;//считаем duration не как сумму операций, а как конец последнего минус начало первого
                     totalDuration += actions.get(actions.size() - 1).getEnd() - actions.get(0).getStart();
                     totalWaitingDuration += actions.stream()
                             .filter(action -> action.getType() == ActionType.MOVEMENT_WAIT || action.getType() == ActionType.TRAIN_LOCOMOTIVE_ENTRY)
@@ -26,7 +27,7 @@ public class TrainStatisticsService {
                 }
             }
         }
-
+        //Переводим во время
         String avgDuration = totalTrains > 0
                 ? timeService.convertMillisToTime(totalDuration / totalTrains)
                 : "";

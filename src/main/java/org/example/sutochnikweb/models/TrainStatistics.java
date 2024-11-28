@@ -1,7 +1,7 @@
 package org.example.sutochnikweb.models;
 
 import org.springframework.stereotype.Service;
-
+//Файлик с полями для отображения транзитных и с переработкой
 @Service
 public class TrainStatistics {
     private int totalTrains;

@@ -18,6 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,6 +29,7 @@ import java.util.Map;
 @Controller
 public class MainController {
 
+    private String originalFileName;
     private static final String UPLOAD_DIR = "uploads/";
     private final SimpleExcelService excelService;
     private final SVGService svgService;
@@ -72,6 +75,7 @@ public class MainController {
             Files.write(tempFilePath, file.getBytes());
 
             File tempFile = tempFilePath.toFile();
+            originalFileName = file.getOriginalFilename();  // Сохраняем имя загружаемого файла
 
             Map<String, HeightRange> map = svgService.parseSvg(tempFile);
             Map<String, List<List<Action>>> transitTrainsMap = transitTrainsService.findTransitTrains(map);
@@ -107,10 +111,18 @@ public class MainController {
         if (excelBytes == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
-
         ByteArrayInputStream bis = new ByteArrayInputStream(excelBytes);
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Disposition", "attachment; filename=generated_excel.xlsx");
+        //Нужна кодировка, чтобы не было ошибки, когда имя файла на кириллице
+        String downloadFileName = originalFileName != null
+                ? originalFileName.replaceFirst("[.][^.]+$", "") + ".xlsx"
+                : "generated_excel.xlsx";
+
+        // Кодируем имя файла в формате RFC 5987
+        String encodedFileName = URLEncoder.encode(downloadFileName, StandardCharsets.UTF_8)
+                .replace("+", "%20"); // Заменяем "+" на "%20" для пробелов
+
+        headers.add("Content-Disposition", "attachment; filename*=UTF-8''" + encodedFileName);
 
         return ResponseEntity.ok().headers(headers).body(excelBytes);
     }

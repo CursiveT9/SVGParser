@@ -92,7 +92,7 @@ public class TrainsWithOvertimeService {
         }
 
         // Вывод результатов
-        printActionPairDetails(reprocessedTrainsMap);
+        //printActionPairDetails(reprocessedTrainsMap);
         return reprocessedTrainsMap;
     }
 
