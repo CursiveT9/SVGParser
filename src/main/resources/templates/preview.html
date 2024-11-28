@@ -14,6 +14,7 @@
         }
         .container {
             width: 95%;
+            margin-top: 100px;
             max-width: 1200px;
             background-color: #fff;
             border: 5px solid #dee2e6;
@@ -44,12 +45,14 @@
             top: 0;
             z-index: 1;
         }
+        .table tr.section-header {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            text-align: center;
+        }
         .table tr:hover {
             background-color: #f1f1f1;
             cursor: pointer;
-        }
-        .table .highlighted {
-            background-color: #ffd1dc;
         }
         .buttons {
             display: flex;
@@ -79,38 +82,47 @@
 <body>
 <div class="container">
     <div class="table-container">
-        <table class="table" th:if="${excelPreview}">
+        <!-- Упрощённая таблица -->
+        <table class="table" th:if="${totalTransitTrains > 0 or totalOvertimeTrains > 0}">
             <thead>
             <tr>
-                <th th:each="header : ${excelPreview.analyticHeaders}" th:text="${header}"></th>
+                <th>Тип поездов</th>
+                <th>Общее количество поездов</th>
+                <th>Среднее время</th>
+                <th>Среднее время ожидания</th>
+                <th>Среднее производительное время</th>
             </tr>
             </thead>
             <tbody>
-            <tr th:each="row : ${excelPreview.analyticRows}" onclick="highlightRow(this)">
-                <td th:each="cell : ${row}" th:text="${cell}" th:class="${cell == 'YourString' ? 'highlight' : ''}"></td>
+            <!-- Раздел "Транзитные поезда" -->
+            <tr th:if="${totalTransitTrains > 0}">
+                <td>Транзитные поезда</td>
+                <td th:text="${totalTransitTrains}"></td>
+                <td th:text="${avgTransitDuration}"></td>
+                <td th:text="${avgTransitWaitingDuration}"></td>
+                <td th:text="${avgTransitEffectiveDuration}"></td>
+            </tr>
+            <!-- Раздел "Поезда с переработкой" -->
+            <tr th:if="${totalOvertimeTrains > 0}">
+                <td>Поезда с переработкой</td>
+                <td th:text="${totalOvertimeTrains}"></td>
+                <td th:text="${avgOvertimeDuration}"></td>
+                <td th:text="${avgOvertimeWaitingDuration}"></td>
+                <td th:text="${avgOvertimeEffectiveDuration}"></td>
             </tr>
             </tbody>
         </table>
     </div>
-    <div class="table-container">
-        <table class="table" th:if="${excelPreview}">
-            <thead>
-            <tr>
-                <th th:each="header : ${excelPreview.headers}" th:text="${header}"></th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="row : ${excelPreview.rows}" onclick="highlightRow(this)">
-                <td th:each="cell : ${row}" th:text="${cell}" th:class="${cell == 'YourString' ? 'highlight' : ''}"></td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+
+
+
+    <!-- Кнопки -->
     <div class="buttons">
         <a class="button back-button" th:href="@{/upload}">Назад</a>
         <a class="button download-button" th:href="@{/download}">Скачать</a>
     </div>
 </div>
+
 <script>
     function highlightRow(row) {
         let highlightedRows = document.querySelectorAll('.highlighted');

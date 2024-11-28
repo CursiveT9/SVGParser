@@ -30,6 +30,7 @@ public class TrainsWithOvertimeService {
             boolean containsMandatoryAction = false;
             boolean containsInspectionStop = false;
             boolean parralelAction = false;
+            boolean containsTrainDeparture = false;
 
             for (int i = 0; i < actions.size(); i++) {
                 Action action = actions.get(i);
@@ -43,6 +44,7 @@ public class TrainsWithOvertimeService {
                     currentSequence = new ArrayList<>();
                     containsMandatoryAction = false;
                     containsInspectionStop = false;
+                    containsTrainDeparture = false;
                     parralelAction = false;
                     currentSequence.add(action);
                 } else if (sequenceStarted) {
@@ -58,6 +60,9 @@ public class TrainsWithOvertimeService {
                     if (action.getType() == ActionType.TRAIN_INSPECTION_STOP) {
                         containsInspectionStop = true;
                     }
+                    if(action.getType()==ActionType.TRAIN_DEPARTURE){
+                        containsTrainDeparture = true;
+                    }
 
                     // Проверяем временной разрыв или конец списка
                     if (i < actions.size() - 1) {
@@ -69,14 +74,14 @@ public class TrainsWithOvertimeService {
                             parralelAction = false;
                         } else if ((gap > 60000) || ((gap < 0) && (gap + 86400000 > 60000))) { // если между операциями больше чем 1 минута в миллисекундах, то считаем что закончилось
                             sequenceStarted = false;
-                            if (containsMandatoryAction && containsInspectionStop) {
+                            if (containsMandatoryAction && containsInspectionStop && !containsTrainDeparture) {
                                 sequences.add(new ArrayList<>(currentSequence));
                             }
                         }
                     } else {
                         // Если конец списка, завершаем последовательность
                         sequenceStarted = false;
-                        if (containsMandatoryAction && containsInspectionStop) {
+                        if (containsMandatoryAction && containsInspectionStop && !containsTrainDeparture) {
                             sequences.add(new ArrayList<>(currentSequence));
                         }
                     }
@@ -87,7 +92,7 @@ public class TrainsWithOvertimeService {
         }
 
         // Вывод результатов
-//        printActionPairDetails(reprocessedTrainsMap);
+        printActionPairDetails(reprocessedTrainsMap);
         return reprocessedTrainsMap;
     }
 

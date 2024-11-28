@@ -1,25 +1,21 @@
 package org.example.sutochnikweb.services;
 
-
 import org.example.sutochnikweb.models.Action;
 import org.example.sutochnikweb.models.ActionType;
 import org.example.sutochnikweb.models.HeightRange;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class TransitTrainsService {
 
-    private final TimeService timeService;
-
-    public TransitTrainsService(TimeService timeService) {
-        this.timeService = timeService;
-    }
-
-    public void findActionPairs(Map<String, HeightRange> heightRangeMap) {
+    public Map<String, List<List<Action>>> findTransitTrains(Map<String, HeightRange> heightRangeMap) {
         // Коллекция для хранения найденных пар для каждого диапазона
-        Map<String, List<List<Action>>> actionPairsMap = new LinkedHashMap<>();
+        Map<String, List<List<Action>>> transitTrainsMap = new LinkedHashMap<>();
 
         for (Map.Entry<String, HeightRange> entry : heightRangeMap.entrySet()) {
             String name = entry.getKey();
@@ -67,7 +63,7 @@ public class TransitTrainsService {
 
                         // Завершаем пару, если находим TRAIN_DEPARTURE
                         if (currentAction.getType() == ActionType.TRAIN_DEPARTURE) {
-                            if(actionListAfterTrain_ARRIVAL.size()>2) {
+                            if (actionListAfterTrain_ARRIVAL.size() > 2) {
                                 pairsForCurrentRange.add(new ArrayList<>(actionListAfterTrain_ARRIVAL));
                                 actionListAfterTrain_ARRIVAL.clear();
                                 trainArrivalFound = false;
@@ -77,45 +73,10 @@ public class TransitTrainsService {
                 }
             }
 
-            // Добавляем список пар в общую карту, если найдены пары
             if (!pairsForCurrentRange.isEmpty()) {
-                actionPairsMap.put(name, pairsForCurrentRange);
+                transitTrainsMap.put(name, pairsForCurrentRange);
             }
         }
-
-        // Вывод результата
-//        for (Map.Entry<String, List<List<Action>>> entry : actionPairsMap.entrySet()) {
-//            System.out.println("For name: " + entry.getKey());
-//            for (List<Action> actionPair : entry.getValue()) {
-//                System.out.println("TRAIN_ARRIVAL -> TRAIN_DEPARTURE pair found:");
-//                for (Action action : actionPair) {
-//                    System.out.println(action.getType() + " " +
-//                            timeService.convertMillisToTime(action.getStart()) + " " +
-//                            timeService.convertMillisToTime(action.getEnd()));
-//                }
-//                System.out.println();
-//            }
-//        }
+        return transitTrainsMap;
     }
-
-
-
-
-
-
-    // Вспомогательный метод для печати найденной пары действий
-    private void printActionPairDetails(Map<String, List<List<Action>>> actionPairsMap) {
-        for (Map.Entry<String, List<List<Action>>> entry : actionPairsMap.entrySet()) {
-            System.out.println("For name: " + entry.getKey());
-            for (List<Action> actionPair : entry.getValue()) {
-                for (Action action : actionPair) {
-                    System.out.println(action.getType() + " " +
-                            timeService.convertMillisToTime(action.getStart()) + " " +
-                            timeService.convertMillisToTime(action.getEnd()));
-                }
-                System.out.println();
-            }
-        }
-    }
-
 }

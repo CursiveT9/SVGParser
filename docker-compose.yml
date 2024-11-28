@@ -1,0 +1,25 @@
+services:
+  sutochnik-webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sutochnik-webapp
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - BACK_BUTTON_URL=https://dev-map.vniias.ru
+    # ports:
+    #   - 8080:8080
+    volumes:
+      - .:/app
+    restart: always
+    networks:
+      - intranet
+
+networks:
+  intranet:
+    external: true
+
+
+
+
+
