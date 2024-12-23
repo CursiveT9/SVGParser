@@ -34,4 +34,20 @@ public class TrainStatistics {
 
     public TrainStatistics() {
     }
+
+    public void setTotalTrains(int totalTrains) {
+        this.totalTrains = totalTrains;
+    }
+
+    public void setAvgDuration(String avgDuration) {
+        this.avgDuration = avgDuration;
+    }
+
+    public void setAvgWaitingDuration(String avgWaitingDuration) {
+        this.avgWaitingDuration = avgWaitingDuration;
+    }
+
+    public void setAvgEffectiveDuration(String avgEffectiveDuration) {
+        this.avgEffectiveDuration = avgEffectiveDuration;
+    }
 }

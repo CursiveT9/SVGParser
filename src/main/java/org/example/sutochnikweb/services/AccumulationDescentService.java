@@ -13,7 +13,6 @@ import java.util.Map;
 
 @Service
 public class AccumulationDescentService {
-
     private final TimeService timeService;
     private final SVGService svgService;
 
@@ -21,6 +20,7 @@ public class AccumulationDescentService {
         this.timeService = timeService;
         this.svgService = svgService;
     }
+
 
     public AccumulationLastAndDescentFields findAverageAccumulationDuration(Map<String, HeightRange> heightRangeMap) {
         // Map дл€ хранени€ средней продолжительности последовательностей ACCUMULATION дл€ каждого пути
@@ -94,17 +94,19 @@ public class AccumulationDescentService {
                 //averageDurationMap.put(name, accumulationLastAndDescentFields);
             }
         }
-        String stringAverageDuration = timeService.convertMillisToTime(totalAverageDuration/totalAccumulationCount);
         accumulationLastAndDescentFields.setCount(totalAccumulationCount);
-        accumulationLastAndDescentFields.setAvgDuration(stringAverageDuration);
+        accumulationLastAndDescentFields.setAvgDuration(totalAverageDuration/totalAccumulationCount);
 
-        return accumulationLastAndDescentFields; // ¬озвращаем карту с результатами
+        return accumulationLastAndDescentFields; // ¬озвращаем map с результатами
     }
 
 
 
-    public Map<String, String> findEndAccumulationSequences(Map<String, HeightRange> heightRangeMap) {
+    public AccumulationLastAndDescentFields findEndAccumulationSequences(Map<String, HeightRange> heightRangeMap) {
         Map<String, String> endAccumulationMap = new LinkedHashMap<>();
+        AccumulationLastAndDescentFields accumulationLastAndDescentFields = new AccumulationLastAndDescentFields();
+        int totalAccumulationCount = 0;
+        double totalAverageDuration = 0;
 
         for (Map.Entry<String, HeightRange> entry : heightRangeMap.entrySet()) {
             String name = entry.getKey();
@@ -119,46 +121,49 @@ public class AccumulationDescentService {
                 Action currentAction = actions.get(i);
 
                 // »щем последовательность ACCUMULATION, заканчивающуюс€ на конце графика
-                if (currentAction.getType() == ActionType.ACCUMULATION && currentAction.getEnd() == 43200000) {
-                    int sequenceStartIndex = i;
-                    long durationSum = currentAction.getDuration();
+                // TODO :  currentAction.getEnd() == 43200000 Ќе всегда конец на 12 часах
+                if(actions.getLast().getType()==ActionType.ACCUMULATION) {
+                    if (currentAction.getType() == ActionType.ACCUMULATION && (currentAction.getEnd() == 43200000 || currentAction.getEnd() == 86400000)) {
+                        int sequenceStartIndex = i;
+                        long durationSum = currentAction.getDuration();
 
-                    // ѕродолжаем искать начало последовательности
-                    for (int j = i - 1; j >= 0; j--) {
-                        Action previousAction = actions.get(j);
+                        // ѕродолжаем искать начало последовательности
+                        for (int j = i - 1; j >= 0; j--) {
+                            Action previousAction = actions.get(j);
 
-                        if (previousAction.getType() == ActionType.ACCUMULATION) {
-                            // ≈сли это ACCUMULATION, провер€ем, образует ли оно корректную последовательность
-                            if (isNextInSequence(previousAction, actions.get(sequenceStartIndex))) {
-                                durationSum += previousAction.getDuration();
-                                sequenceStartIndex = j; // ќбновл€ем индекс начала последовательности
+                            if (previousAction.getType() == ActionType.ACCUMULATION) {
+                                // ≈сли это ACCUMULATION, провер€ем, образует ли оно корректную последовательность
+                                if (isNextInSequence(previousAction, actions.get(sequenceStartIndex))) {
+                                    durationSum += previousAction.getDuration();
+                                    sequenceStartIndex = j; // ќбновл€ем индекс начала последовательности
+                                } else {
+                                    break; // ≈сли последовательность разорвана, завершаем поиск
+                                }
                             } else {
-                                break; // ≈сли последовательность разорвана, завершаем поиск
-                            }
-                        } else {
-                            // ѕропускаем не-ACCUMULATION действи€, если они не нарушают пор€док
-                            if (!isActionBreakingSequence(previousAction, actions.get(sequenceStartIndex))) {
-                                continue;
-                            } else {
-                                break; // ѕрерываем, если действие нарушает последовательность
+                                // ѕропускаем не-ACCUMULATION действи€, если они не нарушают пор€док
+                                if (!isActionBreakingSequence(previousAction, actions.get(sequenceStartIndex))) {
+                                    continue;
+                                } else {
+                                    break; // ѕрерываем, если действие нарушает последовательность
+                                }
                             }
                         }
-                    }
 
-                    // ѕровер€ем, есть ли другие действи€ в последовательности
-                    boolean isValidSequence = true;
-                    for (int k = sequenceStartIndex; k <= i; k++) {
-                        if (actions.get(k).getType() != ActionType.ACCUMULATION) {
-                            isValidSequence = false;
-                            break;
+                        // ѕровер€ем, есть ли другие действи€ в последовательности
+                        boolean isValidSequence = true;
+                        for (int k = sequenceStartIndex; k <= i; k++) {
+                            if (actions.get(k).getType() != ActionType.ACCUMULATION) {
+                                isValidSequence = false;
+                                break;
+                            }
                         }
-                    }
 
-                    // ≈сли последовательность корректна, записываем еЄ
-                    if (isValidSequence) {
-                        totalDuration += durationSum;
-                        count++;
-                        break; // «авершаем обработку, так как нашли валидную последовательность
+                        // ≈сли последовательность корректна, записываем еЄ
+                        if (isValidSequence) {
+                            totalDuration += durationSum;
+                            count++;
+                            break; // «авершаем обработку, так как нашли валидную последовательность
+                        }
                     }
                 }
             }
@@ -166,12 +171,17 @@ public class AccumulationDescentService {
             // ¬ычисл€ем среднюю продолжительность, если найдены последовательности
             if (count > 0) {
                 double averageDuration = (double) totalDuration / count;
-                String stringAverageDuration = timeService.convertMillisToTime(averageDuration);
-                endAccumulationMap.put(name, stringAverageDuration);
+                totalAccumulationCount+=count;
+                totalAverageDuration+=averageDuration;
+
+                //endAccumulationMap.put(name, stringAverageDuration);
             }
         }
 
-        return endAccumulationMap;
+        accumulationLastAndDescentFields.setCount(totalAccumulationCount);
+        accumulationLastAndDescentFields.setAvgDuration(totalAverageDuration/totalAccumulationCount);
+
+        return accumulationLastAndDescentFields; // ¬озвращаем map с результатами
     }
 
     // ѕроверка корректности последовательности с учетом перехода через сутки

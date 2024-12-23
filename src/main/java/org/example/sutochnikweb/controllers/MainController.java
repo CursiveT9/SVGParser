@@ -6,7 +6,6 @@ import org.example.sutochnikweb.models.Action;
 import org.example.sutochnikweb.models.HeightRange;
 import org.example.sutochnikweb.models.TrainStatistics;
 import org.example.sutochnikweb.services.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,10 +44,12 @@ public class MainController {
 
     private final AccumulationDescentService accumulationDescentService;
 
+    private final FullOvertimeStatisticService fullOvertimeStatisticService;
+
     private byte[] excelBytes;
 
 
-    public MainController(SimpleExcelService excelService, SVGService svgService, TimeService timeService, TransitTrainsService transitTrainsService, TrainsWithOvertimeService trainsWithOvertimeService, TrainStatisticsService trainStatisticsService, AccumulationDescentService accumulationDescentService, DepartureService departureService) {
+    public MainController(SimpleExcelService excelService, SVGService svgService, TimeService timeService, TransitTrainsService transitTrainsService, TrainsWithOvertimeService trainsWithOvertimeService, TrainStatisticsService trainStatisticsService, AccumulationDescentService accumulationDescentService, DepartureService departureService, FullOvertimeStatisticService fullOvertimeStatisticService) {
         this.excelService = excelService;
         this.svgService = svgService;
         this.timeService = timeService;
@@ -57,6 +58,7 @@ public class MainController {
         this.trainStatisticsService = trainStatisticsService;
         this.accumulationDescentService = accumulationDescentService;
         this.departureService = departureService;
+        this.fullOvertimeStatisticService = fullOvertimeStatisticService;
     }
 
     @GetMapping("/")
@@ -89,7 +91,9 @@ public class MainController {
             Map<String, List<List<Action>>> transitTrainsMap = transitTrainsService.findTransitTrains(map);
             Map<String, List<List<Action>>> overtimeTrainsMap = trainsWithOvertimeService.findTrainsWithOvertime(map);
             AccumulationLastAndDescentFields accumulationDescentTrains = accumulationDescentService.findAverageAccumulationDuration(map);
-            Map<String, String> endAccumulationDescentTrains = accumulationDescentService.findEndAccumulationSequences(map);
+            AccumulationLastAndDescentFields endAccumulationDescentTrains = accumulationDescentService.findEndAccumulationSequences(map);
+            accumulationDescentTrains.setCount(accumulationDescentTrains.getCount()+endAccumulationDescentTrains.getCount());
+            accumulationDescentTrains.setAvgDuration((accumulationDescentTrains.getAvgDuration()+endAccumulationDescentTrains.getAvgDuration())/2);
             Map<String, List<List<Action>>> departureTrainsMap = departureService.findFormationOrShuntingPairs(map);
 
             Workbook excelFile = excelService.convertToExcel(map);
@@ -97,28 +101,26 @@ public class MainController {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             excelFile.write(bos);
             excelBytes = bos.toByteArray();
-            TrainStatistics transitTrainsStatistics=trainStatisticsService.calculateTrainStatistics(transitTrainsMap, timeService);
+            TrainStatistics transitTrainsStatistic=trainStatisticsService.calculateTrainStatistics(transitTrainsMap, timeService);
             TrainStatistics overtimeTrainsStatistic=trainStatisticsService.calculateTrainStatistics(overtimeTrainsMap, timeService);
             TrainStatistics departureTrainsStatistic=trainStatisticsService.calculateTrainStatistics(departureTrainsMap, timeService);
-            model.addAttribute("totalDepartureTrains", departureTrainsStatistic.getTotalTrains());
-            model.addAttribute("avgDepartureDuration", departureTrainsStatistic.getAvgDuration());
-            model.addAttribute("avgDepartureWaitingDuration", departureTrainsStatistic.getAvgWaitingDuration());
-            model.addAttribute("avgDepartureEffectiveDuration", departureTrainsStatistic.getAvgEffectiveDuration());
+            TrainStatistics fullOvertimeTrainsStatistic = fullOvertimeStatisticService.sumPartsOfOvertimeTrains
+                    (overtimeTrainsStatistic,
+                    departureTrainsStatistic,
+                    accumulationDescentTrains);
 
-
-            model.addAttribute("totalTransitTrains", transitTrainsStatistics.getTotalTrains());
-            model.addAttribute("avgTransitDuration", transitTrainsStatistics.getAvgDuration());
-            model.addAttribute("avgTransitWaitingDuration", transitTrainsStatistics.getAvgWaitingDuration());
-            model.addAttribute("avgTransitEffectiveDuration", transitTrainsStatistics.getAvgEffectiveDuration());
-
-            model.addAttribute("totalOvertimeTrains", overtimeTrainsStatistic.getTotalTrains());
-            model.addAttribute("avgOvertimeDuration", overtimeTrainsStatistic.getAvgDuration());
-            model.addAttribute("avgOvertimeWaitingDuration", overtimeTrainsStatistic.getAvgWaitingDuration());
-            model.addAttribute("avgOvertimeEffectiveDuration", overtimeTrainsStatistic.getAvgEffectiveDuration());
+            model.addAttribute("transitTrainsStatistic", transitTrainsStatistic);
+            model.addAttribute("arrivalTrainsStatistic", overtimeTrainsStatistic);
+            model.addAttribute("departureTrainsStatistic", departureTrainsStatistic);
+            model.addAttribute("fullOvertimeTrainsStatistic", fullOvertimeTrainsStatistic);
 
             model.addAttribute("accumulationDescentTrains", accumulationDescentTrains);
-            model.addAttribute("endAccumulationDescentTrains", endAccumulationDescentTrains);
-            model.addAttribute("departureTrains", departureTrainsMap);
+            model.addAttribute("stringAccumulationDescentTrainsAvgTime", timeService.convertMillisToTime(accumulationDescentTrains.getAvgDuration()));
+
+//Тесты
+            //model.addAttribute("departureTrains", departureTrainsMap);
+            //Map<String, List<String>> pairsTimeMap = departureService.getPairsDurations(departureTrainsMap);
+            //model.addAttribute("departureTrains", pairsTimeMap);
 
             return "preview";
 

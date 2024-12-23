@@ -14,20 +14,35 @@ public class TrainStatisticsService {
         int totalTrains = 0;
         int totalDuration = 0;
         int totalWaitingDuration = 0;
+        final int TWENTY_FOUR_HOURS_IN_MILLIS = 86400000; // 24 часа в миллисекундах
 
         for (List<List<Action>> actionGroups : trainMap.values()) {
             for (List<Action> actions : actionGroups) {
                 if (!actions.isEmpty()) {
-                    totalTrains++;//считаем duration не как сумму операций, а как конец последнего минус начало первого
-                    totalDuration += actions.get(actions.size() - 1).getEnd() - actions.get(0).getStart();
+                    totalTrains++;
+                    long startTime = actions.get(0).getStart();
+                    long endTime = actions.get(actions.size() - 1).getEnd();
+
+                    // Если `endTime` меньше `startTime`, добавляем 24 часа
+                    if (endTime < startTime) {
+                        endTime += TWENTY_FOUR_HOURS_IN_MILLIS;
+                    }
+
+                    // Вычисляем общую длительность
+                    totalDuration += endTime - startTime;
+
+                    // Считаем общую длительность ожидания
                     totalWaitingDuration += actions.stream()
-                            .filter(action -> action.getType() == ActionType.MOVEMENT_WAIT || action.getType() == ActionType.TRAIN_LOCOMOTIVE_ENTRY)
+                            .filter(action -> action.getType() == ActionType.MOVEMENT_WAIT || action.getType() == ActionType.TRAIN_LOCOMOTIVE_ENTRY
+                            ||action.getType() == ActionType.SLOT_WAIT || action.getType() == ActionType.IDLE_TIME
+                                    || action.getType() == ActionType.CREW_WAIT)
                             .mapToInt(Action::getDuration)
                             .sum();
                 }
             }
         }
-        //Переводим во время
+
+        // Переводим данные во время
         String avgDuration = totalTrains > 0
                 ? timeService.convertMillisToTime(totalDuration / totalTrains)
                 : "";

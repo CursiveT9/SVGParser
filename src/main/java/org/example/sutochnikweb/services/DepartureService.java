@@ -91,6 +91,30 @@ public class DepartureService {
         return formationOrShuntingMap;
     }
 
+   /* public Map<String, List<String>> getPairsDurations(Map<String, List<List<Action>>> formationOrShuntingMap) {
+        Map<String, List<String>> pairsTimeMap = new LinkedHashMap<>();
+
+        for (Map.Entry<String, List<List<Action>>> entry : formationOrShuntingMap.entrySet()) {
+            String name = entry.getKey();
+            List<List<Action>> pairs = entry.getValue();
+            List<String> pairDurations = new ArrayList<>();
+
+            for (List<Action> pair : pairs) {
+                if (!pair.isEmpty()) {
+                    long startTime = pair.get(0).getStart(); // Начало первого действия
+                    long endTime = pair.get(pair.size() - 1).getEnd(); // Конец последнего действия
+                    if(startTime>endTime){
+                        endTime+=86400000;
+                    }
+                    long duration = endTime - startTime; // Разница (длительность)
+                    pairDurations.add("Duration: " + duration + " ms" +" Start "+ startTime+ " End " + endTime);
+                }
+            }
+            pairsTimeMap.put(name, pairDurations);
+        }
+        return pairsTimeMap;
+    }
+*/
 
     private void printFormationOrShuntingMap(Map<String, List<List<Action>>> map) {
         for (Map.Entry<String, List<List<Action>>> entry : map.entrySet()) {
