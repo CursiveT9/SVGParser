@@ -17,7 +17,11 @@ import java.util.regex.Pattern;
 @Service
 public class SVGService {
     static final Double START_X_FROM_0 = 250.0;
-    static Double END_X;
+    static Integer END_X;
+
+    int startTime;
+
+
     public LinkedHashMap<String, HeightRange> parseSvg(File svgFile) {
         try {
             // Указание полного пути к файлу SVG, если не фуричит значит что-то с кодировкой в проекте
@@ -33,7 +37,8 @@ public class SVGService {
             Element documentElement = document.getDocumentElement();
             // Чтение width документа
             String widthStr = documentElement.getAttribute("width");
-            END_X = Double.parseDouble(widthStr);
+            int width = (int) Math.round(Double.parseDouble(widthStr));
+            END_X = width;
 
 
             // Получение списка всех элементов <g> в документе
@@ -66,6 +71,7 @@ public class SVGService {
             String elementText;
             int elementY = 0; // высота элемента для дальнейшего определения его в диапазон
             int startTime = 0;
+            int endTime = 0;
             boolean isCompleted = true; // флаг полупрозрачных, незавершенных операций
 
             for (int i = 0; i < gList.getLength(); i++) { // первый прогон для определения размера файла и именования диапазонов
@@ -73,8 +79,9 @@ public class SVGService {
                 String gId = gElement.getAttribute("id");
                 if ("TimelineScale".equals(gId)) {
                     NodeList childTextList = gElement.getElementsByTagName("text");
-                    Element textElement = (Element) childTextList.item(0);
-                    startTime = Integer.parseInt(textElement.getTextContent());
+                    Element startTimeText = (Element) childTextList.item(0);
+                    startTime = Integer.parseInt(startTimeText.getTextContent());
+                    setStartTime(startTime);
                     // System.out.println("Начало суточника в " + startTime + " часов");
                 }
                 if ("DailyDiagramCaptionView".equals(gId)) {
@@ -572,4 +579,16 @@ public class SVGService {
         return (int) (elementWidth / 180 * 60 * 60 * 1000); // в часу 180
     }
 
+    public int getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(int startTime) {
+        this.startTime = startTime;
+    }
+
+
+    public static Integer getEndX() {
+        return END_X;
+    }
 }

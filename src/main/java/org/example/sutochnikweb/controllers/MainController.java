@@ -1,10 +1,12 @@
 package org.example.sutochnikweb.controllers;
 
 import org.apache.poi.ss.usermodel.Workbook;
+import org.example.sutochnikweb.models.AccumulationLastAndDescentFields;
 import org.example.sutochnikweb.models.Action;
 import org.example.sutochnikweb.models.HeightRange;
 import org.example.sutochnikweb.models.TrainStatistics;
 import org.example.sutochnikweb.services.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,18 +39,24 @@ public class MainController {
     private final TransitTrainsService transitTrainsService;
     private final TrainsWithOvertimeService trainsWithOvertimeService;
 
+    public final DepartureService departureService;
+
     private final TrainStatisticsService trainStatisticsService;
+
+    private final AccumulationDescentService accumulationDescentService;
 
     private byte[] excelBytes;
 
 
-    public MainController(SimpleExcelService excelService, SVGService svgService, TimeService timeService, TransitTrainsService transitTrainsService, TrainsWithOvertimeService trainsWithOvertimeService, TrainStatisticsService trainStatisticsService) {
+    public MainController(SimpleExcelService excelService, SVGService svgService, TimeService timeService, TransitTrainsService transitTrainsService, TrainsWithOvertimeService trainsWithOvertimeService, TrainStatisticsService trainStatisticsService, AccumulationDescentService accumulationDescentService, DepartureService departureService) {
         this.excelService = excelService;
         this.svgService = svgService;
         this.timeService = timeService;
         this.transitTrainsService = transitTrainsService;
         this.trainsWithOvertimeService = trainsWithOvertimeService;
         this.trainStatisticsService = trainStatisticsService;
+        this.accumulationDescentService = accumulationDescentService;
+        this.departureService = departureService;
     }
 
     @GetMapping("/")
@@ -80,6 +88,9 @@ public class MainController {
             Map<String, HeightRange> map = svgService.parseSvg(tempFile);
             Map<String, List<List<Action>>> transitTrainsMap = transitTrainsService.findTransitTrains(map);
             Map<String, List<List<Action>>> overtimeTrainsMap = trainsWithOvertimeService.findTrainsWithOvertime(map);
+            AccumulationLastAndDescentFields accumulationDescentTrains = accumulationDescentService.findAverageAccumulationDuration(map);
+            Map<String, String> endAccumulationDescentTrains = accumulationDescentService.findEndAccumulationSequences(map);
+            Map<String, List<List<Action>>> departureTrainsMap = departureService.findFormationOrShuntingPairs(map);
 
             Workbook excelFile = excelService.convertToExcel(map);
 
@@ -88,6 +99,12 @@ public class MainController {
             excelBytes = bos.toByteArray();
             TrainStatistics transitTrainsStatistics=trainStatisticsService.calculateTrainStatistics(transitTrainsMap, timeService);
             TrainStatistics overtimeTrainsStatistic=trainStatisticsService.calculateTrainStatistics(overtimeTrainsMap, timeService);
+            TrainStatistics departureTrainsStatistic=trainStatisticsService.calculateTrainStatistics(departureTrainsMap, timeService);
+            model.addAttribute("totalDepartureTrains", departureTrainsStatistic.getTotalTrains());
+            model.addAttribute("avgDepartureDuration", departureTrainsStatistic.getAvgDuration());
+            model.addAttribute("avgDepartureWaitingDuration", departureTrainsStatistic.getAvgWaitingDuration());
+            model.addAttribute("avgDepartureEffectiveDuration", departureTrainsStatistic.getAvgEffectiveDuration());
+
 
             model.addAttribute("totalTransitTrains", transitTrainsStatistics.getTotalTrains());
             model.addAttribute("avgTransitDuration", transitTrainsStatistics.getAvgDuration());
@@ -99,10 +116,14 @@ public class MainController {
             model.addAttribute("avgOvertimeWaitingDuration", overtimeTrainsStatistic.getAvgWaitingDuration());
             model.addAttribute("avgOvertimeEffectiveDuration", overtimeTrainsStatistic.getAvgEffectiveDuration());
 
+            model.addAttribute("accumulationDescentTrains", accumulationDescentTrains);
+            model.addAttribute("endAccumulationDescentTrains", endAccumulationDescentTrains);
+            model.addAttribute("departureTrains", departureTrainsMap);
+
             return "preview";
 
         } catch (Exception e) {
-            model.addAttribute("message", "Произошла ошибка при загрузке файл. Убедитесь, что загружаете суточный план-график, который не был в стороннем редакторе");
+            model.addAttribute("message", "Произошла ошибка при загрузке файла. Убедитесь, что загружаете суточный план-график, который не был в стороннем редакторе");
             return "upload";
         }
     }

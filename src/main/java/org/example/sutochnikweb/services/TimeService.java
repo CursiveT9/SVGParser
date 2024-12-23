@@ -35,4 +35,21 @@ public class TimeService {
         // Форматируем в строку вида "HH:mm:ss"
         return String.format("%02d:%02d:%02d", hours, minutes, remainingSeconds);
     }
+
+    public double convertTimeToMillis(String timeString) {
+        // Разбиваем строку на часы, минуты и секунды
+        String[] parts = timeString.split(":");
+
+        int hours = Integer.parseInt(parts[0]);
+        int minutes = Integer.parseInt(parts[1]);
+        int seconds = Integer.parseInt(parts[2]);
+
+        // Преобразуем всё в миллисекунды
+        return (hours * 3600 + minutes * 60 + seconds) * 1000.0;
+    }
+
+
+    public int calculateMillisFromHours(int startTime){
+        return startTime*60*60*1000;
+    }
 }

@@ -14,7 +14,8 @@ import java.util.Map;
 public class TransitTrainsService {
 
     public Map<String, List<List<Action>>> findTransitTrains(Map<String, HeightRange> heightRangeMap) {
-        // Коллекция для хранения найденных пар для каждого диапазона
+        // Коллекция для хранения найденных транзитных поездов для каждого диапазона
+        //Пары - действия TRAIN_ARRIVAL и TRAIN_DEPARTURE
         Map<String, List<List<Action>>> transitTrainsMap = new LinkedHashMap<>();
 
         for (Map.Entry<String, HeightRange> entry : heightRangeMap.entrySet()) {
@@ -22,7 +23,7 @@ public class TransitTrainsService {
             HeightRange heightRange = entry.getValue();
             List<Action> actions = heightRange.getActions();
 
-            // Инициализация списка для хранения пар для текущего диапазона
+            // Инициализация списка для хранения транзитных поездов для текущего диапазона
             List<List<Action>> pairsForCurrentRange = new ArrayList<>();
             List<Action> actionListAfterTrain_ARRIVAL = new ArrayList<>();
             boolean trainArrivalFound = false;

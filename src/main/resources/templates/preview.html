@@ -83,7 +83,7 @@
 <div class="container">
     <div class="table-container">
         <!-- Упрощённая таблица -->
-        <table class="table" th:if="${totalTransitTrains > 0 or totalOvertimeTrains > 0}">
+        <table class="table">
             <thead>
             <tr>
                 <th>Тип поездов</th>
@@ -95,27 +95,84 @@
             </thead>
             <tbody>
             <!-- Раздел "Транзитные поезда" -->
-            <tr th:if="${totalTransitTrains > 0}">
+            <tr>
                 <td>Транзитные поезда</td>
                 <td th:text="${totalTransitTrains}"></td>
                 <td th:text="${avgTransitDuration}"></td>
                 <td th:text="${avgTransitWaitingDuration}"></td>
                 <td th:text="${avgTransitEffectiveDuration}"></td>
             </tr>
-            <!-- Раздел "Поезда с переработкой" -->
-            <tr th:if="${totalOvertimeTrains > 0}">
-                <td>Поезда с переработкой</td>
+            <!-- Раздел "Отправления" -->
+            <tr>
+                <td>Прибытия транзита с переработкой</td>
                 <td th:text="${totalOvertimeTrains}"></td>
                 <td th:text="${avgOvertimeDuration}"></td>
                 <td th:text="${avgOvertimeWaitingDuration}"></td>
                 <td th:text="${avgOvertimeEffectiveDuration}"></td>
             </tr>
+            <tr>
+                <td>Отправления транзита с переработкой</td>
+                <td th:text="${totalDepartureTrains}"></td>
+                <td th:text="${avgDepartureDuration}"></td>
+                <td th:text="${avgDepartureWaitingDuration}"></td>
+                <td th:text="${avgDepartureEffectiveDuration}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Количество накоплений</th>
+                <th>Средняя продолжительность накопления до перестановки</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td th:text="${accumulationDescentTrains.getCount()}"></td>
+                <td th:text="${accumulationDescentTrains.getAvgDuration()}"></td>
+            </tr>
             </tbody>
         </table>
     </div>
 
+    <div class="table-container">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Название пути</th>
+                <th>Продолжительность последнего накопления</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="entry : ${endAccumulationDescentTrains}">
+                <td th:text="${entry.key}"></td>
+                <td th:text="${entry.value}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 
-
+    <div class="table-container">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Название пути</th>
+                <th>Количество отправлений</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="entry : ${departureTrains}">
+                <td th:text="${entry.key}"></td>
+<!--
+                <td th:text="${entry.value}"></td>
+-->
+                <td th:text="${entry.value.size()}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
     <!-- Кнопки -->
     <div class="buttons">
         <a class="button back-button" th:href="@{/upload}">Назад</a>

@@ -87,6 +87,14 @@ public class Action {
         this.end = (this.end + startTimeInMillis) % millisecondsInDay;
     }
 
+    public void setStart(int start) {
+        this.start = start;
+    }
+
+    public void setEnd(int end) {
+        this.end = end;
+    }
+
     @Override
     public String toString() {
         return "Action{" +
