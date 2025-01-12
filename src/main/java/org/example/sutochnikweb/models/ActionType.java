@@ -37,7 +37,9 @@ public enum ActionType {
     SHUNTING_LOCOMOTIVE_RECOUPLING("Перецепка маневрового локомотива"),
     CAR_PUSHBACK("Осаживание вагонов"),
     DISSOLUTION_PERMISSION_WAIT("Ожидание разрешения на роспуск"),
-    ACCUMULATION("Накопление");
+    ACCUMULATION("Накопление"),
+
+    FORMATION_PRESENTATION("Формирование подачи");
 
     private final String description;
 

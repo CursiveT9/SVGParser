@@ -209,6 +209,8 @@ public class SVGService {
                                         } else if (pathFill.equals("#FFFFFF")) {
                                             heightRangesMap.get(range).addAction(ActionType.FORMATION_COMPLETION, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                             break;
+                                        } else if (pathFill.equals("url(#EllipsePattern)")){
+                                            heightRangesMap.get(range).addAction(ActionType.FORMATION_PRESENTATION, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         }
                                     }
                                 }
