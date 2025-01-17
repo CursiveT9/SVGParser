@@ -87,8 +87,9 @@ public class DepartureService {
         }
 
         // Печать результата
-        printFormationOrShuntingMap(formationOrShuntingMap);
+        //printFormationOrShuntingMap(formationOrShuntingMap);
         return formationOrShuntingMap;
+
     }
 
    /* public Map<String, List<String>> getPairsDurations(Map<String, List<List<Action>>> formationOrShuntingMap) {

@@ -52,4 +52,12 @@ public class TimeService {
     public int calculateMillisFromHours(int startTime){
         return startTime*60*60*1000;
     }
+
+    public int getHoursFromDuration(String duration) {
+        if (duration != null && !duration.isEmpty()) {
+            return Integer.parseInt(duration.substring(0, 2)); // Извлекаем первые две цифры
+        }
+        return 0; // Значение по умолчанию
+    }
+
 }

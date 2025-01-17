@@ -3,6 +3,7 @@ package org.example.sutochnikweb.services;
 import org.example.sutochnikweb.models.Action;
 import org.example.sutochnikweb.models.ActionType;
 import org.example.sutochnikweb.models.TrainStatistics;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,6 +11,13 @@ import java.util.Map;
 //Обработка времён транзитных и с переработкой
 @Service
 public class TrainStatisticsService {
+
+    final TimeService timeService;
+
+    public TrainStatisticsService(TimeService timeService) {
+        this.timeService = timeService;
+    }
+
     public TrainStatistics calculateTrainStatistics(Map<String, List<List<Action>>> trainMap, TimeService timeService) {
         int totalTrains = 0;
         int totalDuration = 0;
@@ -54,5 +62,12 @@ public class TrainStatisticsService {
                 : "";
 
         return new TrainStatistics(totalTrains, avgDuration, avgWaitingDuration, avgEffectiveDuration);
+    }
+
+    public int calculateWorkingPark(int transitWithProcessingCount, int transitWithoutProcessingCount,
+                                    TrainStatistics transitWithProcessingParams, TrainStatistics transitWithoutProcessingParams){
+        return (timeService.getHoursFromDuration(transitWithProcessingParams.getAvgDuration()) *
+                timeService.getHoursFromDuration(transitWithoutProcessingParams.getAvgDuration())+
+                transitWithProcessingCount*transitWithoutProcessingCount)/24;
     }
 }

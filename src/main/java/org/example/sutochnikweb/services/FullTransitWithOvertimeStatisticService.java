@@ -8,10 +8,10 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 @Service
-public class FullOvertimeStatisticService {
+public class FullTransitWithOvertimeStatisticService {
     private final TimeService timeService;
 
-    public FullOvertimeStatisticService(TimeService timeService) {
+    public FullTransitWithOvertimeStatisticService(TimeService timeService) {
         this.timeService = timeService;
     }
 
@@ -19,11 +19,11 @@ public class FullOvertimeStatisticService {
 
 
 
-    public TrainStatistics sumPartsOfOvertimeTrains(TrainStatistics arrivalTrainsStatistic, TrainStatistics departureTrainsStatistic, AccumulationLastAndDescentFields accumulationLastAndDescentFields) {
-        TrainStatistics fullOvertimeTrainsStatistic = new TrainStatistics();
+    public TrainStatistics sumPartsOfWithOvertimeTrains(TrainStatistics arrivalTrainsStatistic, TrainStatistics departureTrainsStatistic, AccumulationLastAndDescentFields accumulationLastAndDescentFields) {
+        TrainStatistics fullWithOvertimeTrainsStatistic = new TrainStatistics();
 
         // Суммируем общее количество поездов
-        fullOvertimeTrainsStatistic.setTotalTrains(
+        fullWithOvertimeTrainsStatistic.setTotalTrains(
                 arrivalTrainsStatistic.getTotalTrains()
                         + departureTrainsStatistic.getTotalTrains()
                         + accumulationLastAndDescentFields.getCount()
@@ -32,8 +32,7 @@ public class FullOvertimeStatisticService {
         // Суммируем среднюю продолжительность
         String totalAvgDuration = addDurations(
                 arrivalTrainsStatistic.getAvgDuration(),
-                departureTrainsStatistic.getAvgDuration(),
-                timeService.convertMillisToTime(accumulationLastAndDescentFields.getAvgDuration())
+                departureTrainsStatistic.getAvgDuration()
         );
         String totalAvgWaitingDuration = addDurations(
                 arrivalTrainsStatistic.getAvgWaitingDuration(),
@@ -41,14 +40,13 @@ public class FullOvertimeStatisticService {
         );
         String totalAvgEffectiveDuration = addDurations(
                 arrivalTrainsStatistic.getAvgEffectiveDuration(),
-                departureTrainsStatistic.getAvgEffectiveDuration(),
-                timeService.convertMillisToTime(accumulationLastAndDescentFields.getAvgDuration())
+                departureTrainsStatistic.getAvgEffectiveDuration()
         );
 
-        fullOvertimeTrainsStatistic.setAvgDuration(totalAvgDuration);
-        fullOvertimeTrainsStatistic.setAvgWaitingDuration(totalAvgWaitingDuration);
-        fullOvertimeTrainsStatistic.setAvgEffectiveDuration(totalAvgEffectiveDuration);
-        return fullOvertimeTrainsStatistic;
+        fullWithOvertimeTrainsStatistic.setAvgDuration(totalAvgDuration);
+        fullWithOvertimeTrainsStatistic.setAvgWaitingDuration(totalAvgWaitingDuration);
+        fullWithOvertimeTrainsStatistic.setAvgEffectiveDuration(totalAvgEffectiveDuration);
+        return fullWithOvertimeTrainsStatistic;
     }
 
     private String addDurations(String... durations) {

@@ -74,6 +74,33 @@
             color: red;
             font-weight: lighter;
         }
+        .card input[type="number"]
+        {
+            display: block;
+            width: 100%;
+            padding: 0.5rem;
+            margin: 0.5rem 0 1rem 0;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .card label {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+            display: block;
+            color: #343a40;
+        }
+
+        .card input[type="number"]:focus,
+        .card input[type="file"]:focus {
+            outline: none;
+            border-color: #80bdff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
     </style>
 </head>
 <body>
@@ -87,6 +114,14 @@
         <h5 class="card-subtitle">Выберите SVG файл для загрузки</h5>
         <form method="post" enctype="multipart/form-data" th:action="@{/upload}">
             <input class="file-input" type="file" name="file" accept=".svg" required />
+            <div>
+                <label for="transitWithoutProcessing">Количество вагонов транзита без переработки:</label>
+                <input type="number" id="transitWithoutProcessing" name="transitWithoutProcessing" min="0" required />
+            </div>
+            <div>
+                <label for="transitWithProcessing">Количество вагонов транзита с переработкой:</label>
+                <input type="number" id="transitWithProcessing" name="transitWithProcessing" min="0" required />
+            </div>
             <button class="card-button" type="submit">Загрузить</button>
             <a href="/" class="back-button">Назад</a>
         </form>

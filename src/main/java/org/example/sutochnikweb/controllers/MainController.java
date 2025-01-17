@@ -42,23 +42,23 @@ public class MainController {
 
     private final TrainStatisticsService trainStatisticsService;
 
-    private final AccumulationDescentService accumulationDescentService;
+    private final AccumulationService accumulationService;
 
-    private final FullOvertimeStatisticService fullOvertimeStatisticService;
+    private final FullTransitWithOvertimeStatisticService fullTransitWithOvertimeStatisticService;
 
     private byte[] excelBytes;
 
 
-    public MainController(SimpleExcelService excelService, SVGService svgService, TimeService timeService, TransitTrainsService transitTrainsService, TrainsWithOvertimeService trainsWithOvertimeService, TrainStatisticsService trainStatisticsService, AccumulationDescentService accumulationDescentService, DepartureService departureService, FullOvertimeStatisticService fullOvertimeStatisticService) {
+    public MainController(SimpleExcelService excelService, SVGService svgService, TimeService timeService, TransitTrainsService transitTrainsService, TrainsWithOvertimeService trainsWithOvertimeService, TrainStatisticsService trainStatisticsService, AccumulationService accumulationService, DepartureService departureService, FullTransitWithOvertimeStatisticService fullTransitWithOvertimeStatisticService) {
         this.excelService = excelService;
         this.svgService = svgService;
         this.timeService = timeService;
         this.transitTrainsService = transitTrainsService;
         this.trainsWithOvertimeService = trainsWithOvertimeService;
         this.trainStatisticsService = trainStatisticsService;
-        this.accumulationDescentService = accumulationDescentService;
+        this.accumulationService = accumulationService;
         this.departureService = departureService;
-        this.fullOvertimeStatisticService = fullOvertimeStatisticService;
+        this.fullTransitWithOvertimeStatisticService = fullTransitWithOvertimeStatisticService;
     }
 
     @GetMapping("/")
@@ -72,7 +72,8 @@ public class MainController {
     }
 
     @PostMapping("/upload")
-    public String uploadFile(@RequestParam("file") MultipartFile file, Model model) {
+    public String uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("transitWithProcessing") int transitWithProcessing,
+                             @RequestParam("transitWithoutProcessing") int transitWithoutProcessing, Model model) {
         if (file.isEmpty()) {
             model.addAttribute("message", "Пожалуйста, выберите файл для загрузки");
             return "upload";
@@ -90,10 +91,12 @@ public class MainController {
             Map<String, HeightRange> map = svgService.parseSvg(tempFile);
             Map<String, List<List<Action>>> transitTrainsMap = transitTrainsService.findTransitTrains(map);
             Map<String, List<List<Action>>> overtimeTrainsMap = trainsWithOvertimeService.findTrainsWithOvertime(map);
-            AccumulationLastAndDescentFields accumulationDescentTrains = accumulationDescentService.findAverageAccumulationDuration(map);
-            AccumulationLastAndDescentFields endAccumulationDescentTrains = accumulationDescentService.findEndAccumulationSequences(map);
+            AccumulationLastAndDescentFields accumulationDescentTrains = accumulationService.findAverageAccumulationDuration(map);
+            AccumulationLastAndDescentFields endAccumulationDescentTrains = accumulationService.findEndAccumulationSequences(map);
             accumulationDescentTrains.setCount(accumulationDescentTrains.getCount()+endAccumulationDescentTrains.getCount());
-            accumulationDescentTrains.setAvgDuration((accumulationDescentTrains.getAvgDuration()+endAccumulationDescentTrains.getAvgDuration())/2);
+            System.out.println(accumulationDescentTrains);
+            System.out.println(endAccumulationDescentTrains);
+            accumulationDescentTrains.setAvgDuration((accumulationDescentTrains.getAvgDuration()*accumulationDescentTrains.getCount()+endAccumulationDescentTrains.getAvgDuration()*endAccumulationDescentTrains.getCount())/(accumulationDescentTrains.getCount()+endAccumulationDescentTrains.getCount()));
             Map<String, List<List<Action>>> departureTrainsMap = departureService.findFormationOrShuntingPairs(map);
 
             Workbook excelFile = excelService.convertToExcel(map);
@@ -101,21 +104,27 @@ public class MainController {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             excelFile.write(bos);
             excelBytes = bos.toByteArray();
-            TrainStatistics transitTrainsStatistic=trainStatisticsService.calculateTrainStatistics(transitTrainsMap, timeService);
+            TrainStatistics transitWithoutProcessingStatistic=trainStatisticsService.calculateTrainStatistics(transitTrainsMap, timeService);
             TrainStatistics overtimeTrainsStatistic=trainStatisticsService.calculateTrainStatistics(overtimeTrainsMap, timeService);
             TrainStatistics departureTrainsStatistic=trainStatisticsService.calculateTrainStatistics(departureTrainsMap, timeService);
-            TrainStatistics fullOvertimeTrainsStatistic = fullOvertimeStatisticService.sumPartsOfOvertimeTrains
+            TrainStatistics transitWithProcessingStatistics = fullTransitWithOvertimeStatisticService.sumPartsOfWithOvertimeTrains
                     (overtimeTrainsStatistic,
                     departureTrainsStatistic,
                     accumulationDescentTrains);
 
-            model.addAttribute("transitTrainsStatistic", transitTrainsStatistic);
+            model.addAttribute("transitWithoutProcessingStatistics", transitWithoutProcessingStatistic);
             model.addAttribute("arrivalTrainsStatistic", overtimeTrainsStatistic);
             model.addAttribute("departureTrainsStatistic", departureTrainsStatistic);
-            model.addAttribute("fullOvertimeTrainsStatistic", fullOvertimeTrainsStatistic);
+            model.addAttribute("transitWithProcessingStatistics", transitWithProcessingStatistics);
 
             model.addAttribute("accumulationDescentTrains", accumulationDescentTrains);
+            System.out.println(accumulationDescentTrains);
             model.addAttribute("stringAccumulationDescentTrainsAvgTime", timeService.convertMillisToTime(accumulationDescentTrains.getAvgDuration()));
+            model.addAttribute("transitWithoutProcessing", transitWithoutProcessing);
+            model.addAttribute("transitWithProcessing", transitWithProcessing);
+            model.addAttribute("hoursTransitWithoutProcessing", timeService.getHoursFromDuration(transitWithoutProcessingStatistic.getAvgDuration()));
+            model.addAttribute("hoursTransitWithProcessing", timeService.getHoursFromDuration(transitWithProcessingStatistics.getAvgDuration()));
+            model.addAttribute("workingPark", trainStatisticsService.calculateWorkingPark(transitWithProcessing, transitWithoutProcessing, transitWithoutProcessingStatistic, transitWithProcessingStatistics));
 
 //Тесты
             //model.addAttribute("departureTrains", departureTrainsMap);

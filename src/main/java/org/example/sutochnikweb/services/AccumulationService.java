@@ -6,17 +6,14 @@ import org.example.sutochnikweb.models.ActionType;
 import org.example.sutochnikweb.models.HeightRange;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
-public class AccumulationDescentService {
+public class AccumulationService {
     private final TimeService timeService;
     private final SVGService svgService;
 
-    public AccumulationDescentService(TimeService timeService, SVGService svgService) {
+    public AccumulationService(TimeService timeService, SVGService svgService) {
         this.timeService = timeService;
         this.svgService = svgService;
     }
@@ -28,19 +25,18 @@ public class AccumulationDescentService {
         AccumulationLastAndDescentFields accumulationLastAndDescentFields = new AccumulationLastAndDescentFields();
         int totalAccumulationCount = 0;
         double totalAverageDuration = 0;
+        Set<HeightRange> accumulationRanges=new HashSet<>();
         // Проходим по каждому элементу из heightRangeMap
         for (Map.Entry<String, HeightRange> entry : heightRangeMap.entrySet()) {
+
             String name = entry.getKey(); // Имя пути
             HeightRange heightRange = entry.getValue(); // Диапазон высот
             List<Action> actions = heightRange.getActions(); // Список действий
 
             List<Long> durations = new ArrayList<>(); // Список для хранения длительности каждой последовательности
-            List<Action> accumulationSequence = new ArrayList<>(); // Список для отслеживания текущей последовательности ACCUMULATION
-
-            // Проходим по действиям
+            List<Action> accumulationSequence = new ArrayList<>(); // Список для отслеживания текущей последовательности ACCUMULATION// Проходим по действиям
             for (int i = 0; i < actions.size(); i++) {
                 Action currentAction = actions.get(i);
-
                 // Если текущий элемент - это ACCUMULATION, добавляем его в последовательность
                 if (currentAction.getType() == ActionType.ACCUMULATION) {
                     // Если последовательность пустая, начинаем новую
@@ -56,29 +52,49 @@ public class AccumulationDescentService {
                             accumulationSequence.add(currentAction);
                         }
                     }
-
-                    // Проверяем, есть ли для текущей последовательности SHUNTING_LOCOMOTIVE_ATTACHMENT и FORMATION_COMPLETION
-                    Action shuntingLocomotiveAttachment = findNextAction(actions, i, ActionType.SHUNTING_LOCOMOTIVE_ATTACHMENT);
-                    if (shuntingLocomotiveAttachment != null
-                            && shuntingLocomotiveAttachment.getStart() == currentAction.getEnd()) {
-                        Action formationCompletion = findNextAction(actions,
-                                actions.indexOf(shuntingLocomotiveAttachment),
-                                ActionType.FORMATION_COMPLETION);
-
-                        // Если последовательность завершена, вычисляем длительность
-                        if (formationCompletion != null) {
-                            long adjustedEndTime = formationCompletion.getStart();
-
-                            // Учитываем переход через сутки
-                            if (formationCompletion.getStart() < currentAction.getStart()) {
-                                adjustedEndTime += 24 * 60 * 60 * 1000; // Добавляем сутки в миллисекундах
+                    Action shunting = findNextAction(actions, i, ActionType.SHUNTING);
+                    if(shunting!=null){
+                        Action shuntingLocomotiveAttachment = findNextAction(actions, actions.indexOf(shunting), ActionType.SHUNTING_LOCOMOTIVE_ATTACHMENT);
+                        if(shuntingLocomotiveAttachment!=null&&currentAction.getEnd() == shuntingLocomotiveAttachment.getStart()){
+                            Action formationCompletion = findNextAction(actions,actions.indexOf(shuntingLocomotiveAttachment), ActionType.FORMATION_COMPLETION);
+                            if (formationCompletion != null) {
+                                long adjustedEndTime = formationCompletion.getStart();
+                                // Учитываем переход через сутки
+                                long duration;
+                                // Записываем продолжительность последовательности
+                                if (accumulationSequence.get(0).getStart() > adjustedEndTime) {
+                                    adjustedEndTime += 24 * 60 * 60 * 1000; // Добавляем сутки в миллисекундах
+                                }
+                                duration = adjustedEndTime - accumulationSequence.get(0).getStart();
+                                durations.add(duration);
+                                accumulationRanges.add(heightRange);
+                                // Очистить текущую последовательность, так как она завершена
                             }
+                        }
+                    }
+                    else {
+                        // Проверяем, есть ли для текущей последовательности SHUNTING_LOCOMOTIVE_ATTACHMENT и FORMATION_COMPLETION
+                        Action shuntingLocomotiveAttachment = findNextAction(actions, i, ActionType.SHUNTING_LOCOMOTIVE_ATTACHMENT);
+                        if (shuntingLocomotiveAttachment != null
+                                && shuntingLocomotiveAttachment.getStart() == currentAction.getStart()) {
+                            Action formationCompletion = findNextAction(actions,
+                                    actions.indexOf(shuntingLocomotiveAttachment),
+                                    ActionType.FORMATION_COMPLETION);
 
-                            // Записываем продолжительность последовательности
-                            long duration = adjustedEndTime - accumulationSequence.get(0).getStart();
-                            durations.add(duration);
-
-                            // Очистить текущую последовательность, так как она завершена
+                            // Если последовательность завершена, вычисляем длительность
+                            if (formationCompletion != null) {
+                                long adjustedEndTime = formationCompletion.getStart();
+                                // Учитываем переход через сутки
+                                long duration;
+                                // Записываем продолжительность последовательности
+                                if (accumulationSequence.get(0).getStart() > adjustedEndTime) {
+                                    adjustedEndTime += 24 * 60 * 60 * 1000; // Добавляем сутки в миллисекундах
+                                }
+                                duration = adjustedEndTime - accumulationSequence.get(0).getStart();
+                                durations.add(duration);
+                                accumulationRanges.add(heightRange);
+                                // Очистить текущую последовательность, так как она завершена
+                            }
                         }
                     }
                 }
@@ -89,25 +105,30 @@ public class AccumulationDescentService {
                 long totalDuration = durations.stream().mapToLong(Long::longValue).sum();
                 double averageDuration = (double) totalDuration / durations.size();
                 totalAccumulationCount+=durations.size();
-                totalAverageDuration+=averageDuration;
-
-                //averageDurationMap.put(name, accumulationLastAndDescentFields);
+                totalAverageDuration+=totalDuration;
+                System.out.println("Range: " + heightRange.getName());
+                System.out.println("Durations: " + durations);
+                System.out.println("Total Duration: " + totalDuration);
             }
         }
+        //37 два раза считает
         accumulationLastAndDescentFields.setCount(totalAccumulationCount);
-        accumulationLastAndDescentFields.setAvgDuration(totalAverageDuration/totalAccumulationCount);
-
+        accumulationLastAndDescentFields.setAvgDuration(
+                totalAccumulationCount > 0 ? totalAverageDuration/totalAccumulationCount : 0
+        );
+        System.out.println("Total Accumulation Count: "+totalAccumulationCount);
+        System.out.println("Total Average Duration: " +totalAverageDuration);
+        System.out.println("Total 1/2: "+totalAverageDuration/accumulationRanges.size());
+        System.out.println(accumulationRanges.size());
         return accumulationLastAndDescentFields; // Возвращаем map с результатами
     }
-
-
 
     public AccumulationLastAndDescentFields findEndAccumulationSequences(Map<String, HeightRange> heightRangeMap) {
         Map<String, String> endAccumulationMap = new LinkedHashMap<>();
         AccumulationLastAndDescentFields accumulationLastAndDescentFields = new AccumulationLastAndDescentFields();
         int totalAccumulationCount = 0;
         double totalAverageDuration = 0;
-
+        Set<HeightRange> accumulationRanges=new HashSet<>();
         for (Map.Entry<String, HeightRange> entry : heightRangeMap.entrySet()) {
             String name = entry.getKey();
             HeightRange heightRange = entry.getValue();
@@ -121,7 +142,7 @@ public class AccumulationDescentService {
                 Action currentAction = actions.get(i);
 
                 // Ищем последовательность ACCUMULATION, заканчивающуюся на конце графика
-                // TODO :  currentAction.getEnd() == 43200000 Не всегда конец на 12 часах
+                // TODO :  currentAction.getEnd() == 43200000 Не всегда конец на 12 часах, может быть на любом место и 5 и 16 итд
                 if(actions.getLast().getType()==ActionType.ACCUMULATION) {
                     if (currentAction.getType() == ActionType.ACCUMULATION && (currentAction.getEnd() == 43200000 || currentAction.getEnd() == 86400000)) {
                         int sequenceStartIndex = i;
@@ -173,14 +194,17 @@ public class AccumulationDescentService {
                 double averageDuration = (double) totalDuration / count;
                 totalAccumulationCount+=count;
                 totalAverageDuration+=averageDuration;
-
-                //endAccumulationMap.put(name, stringAverageDuration);
+                accumulationRanges.add(heightRange);
+                System.out.println("Range: " + heightRange.getName());
+                System.out.println("Durations: " + averageDuration);
+                System.out.println("Total Duration: " + totalDuration);                //endAccumulationMap.put(name, stringAverageDuration);
             }
         }
 
         accumulationLastAndDescentFields.setCount(totalAccumulationCount);
-        accumulationLastAndDescentFields.setAvgDuration(totalAverageDuration/totalAccumulationCount);
-
+        accumulationLastAndDescentFields.setAvgDuration(
+                totalAccumulationCount > 0 ? totalAverageDuration/totalAccumulationCount : 0
+        );
         return accumulationLastAndDescentFields; // Возвращаем map с результатами
     }
 
@@ -212,9 +236,6 @@ public class AccumulationDescentService {
         // Для ACCUMULATION проверяем логику перехода через сутки
         return false; // ACCUMULATION не нарушает последовательность
     }
-
-
-
 
     private Action findNextAction(List<Action> actions, int startIndex, ActionType targetType) {
         for (int i = startIndex + 1; i < actions.size(); i++) {

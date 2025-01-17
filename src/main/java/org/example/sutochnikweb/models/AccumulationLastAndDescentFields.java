@@ -2,7 +2,7 @@ package org.example.sutochnikweb.models;
 
 public class AccumulationLastAndDescentFields {
     private Integer count;
-    private Double avgDuration;
+    private double avgDuration;
 
     public AccumulationLastAndDescentFields() {
     }
@@ -19,7 +19,15 @@ public class AccumulationLastAndDescentFields {
         return avgDuration;
     }
 
-    public void setAvgDuration(Double avgDuration) {
+    public void setAvgDuration(double avgDuration) {
         this.avgDuration = avgDuration;
+    }
+
+    @Override
+    public String toString() {
+        return "AccumulationLastAndDescentFields{" +
+                "count=" + count +
+                ", avgDuration=" + avgDuration +
+                '}';
     }
 }

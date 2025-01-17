@@ -96,33 +96,36 @@
             <tbody>
             <!-- Раздел "Транзитные поезда" -->
             <tr>
-                <td>Транзитные поезда без переработки</td>
-                <td th:text="${transitTrainsStatistic.getTotalTrains()}"></td>
-                <td th:text="${transitTrainsStatistic.getAvgDuration()}"></td>
-                <td th:text="${transitTrainsStatistic.getAvgWaitingDuration()}"></td>
-                <td th:text="${transitTrainsStatistic.getAvgEffectiveDuration()}"></td>
+                <td>Транзит без переработки</td>
+                <td th:text="${transitWithoutProcessingStatistics.getTotalTrains()}"></td>
+                <td th:text="${transitWithoutProcessingStatistics.getAvgDuration()}"></td>
+                <td th:text="${transitWithoutProcessingStatistics.getAvgWaitingDuration()}"></td>
+                <td th:text="${transitWithoutProcessingStatistics.getAvgEffectiveDuration()}"></td>
             </tr>
-            <!-- Раздел "Отправления" -->
             <tr>
-                <td>Прибытия транзита с переработкой</td>
+                <td>Транзит с переработкой</td>
+                <td th:text="${transitWithProcessingStatistics.getTotalTrains()}"></td>
+                <td th:text="${transitWithProcessingStatistics.getAvgDuration()}"></td>
+                <td th:text="${transitWithProcessingStatistics.getAvgWaitingDuration()}"></td>
+                <td th:text="${transitWithProcessingStatistics.getAvgEffectiveDuration()}"></td>
+            </tr>            <tr>
+                <td>По прибытию</td>
                 <td th:text="${arrivalTrainsStatistic.getTotalTrains()}"></td>
                 <td th:text="${arrivalTrainsStatistic.getAvgDuration()}"></td>
                 <td th:text="${arrivalTrainsStatistic.getAvgWaitingDuration()}"></td>
                 <td th:text="${arrivalTrainsStatistic.getAvgEffectiveDuration()}"></td>
             </tr>
             <tr>
-                <td>Отправления транзита с переработкой</td>
+                <td>Накопление</td>
+                <td th:text="${accumulationDescentTrains.getCount()}"></td>
+                <td th:text="${stringAccumulationDescentTrainsAvgTime}"></td>
+            </tr>
+            <tr>
+                <td>По отправлению</td>
                 <td th:text="${departureTrainsStatistic.getTotalTrains()}"></td>
                 <td th:text="${departureTrainsStatistic.getAvgDuration()}"></td>
                 <td th:text="${departureTrainsStatistic.getAvgWaitingDuration()}"></td>
                 <td th:text="${departureTrainsStatistic.getAvgEffectiveDuration()}"></td>
-            </tr>
-            <tr>
-                <td>Полная статистика по транзитным поездам с переработкой</td>
-                <td th:text="${fullOvertimeTrainsStatistic.getTotalTrains()}"></td>
-                <td th:text="${fullOvertimeTrainsStatistic.getAvgDuration()}"></td>
-                <td th:text="${fullOvertimeTrainsStatistic.getAvgWaitingDuration()}"></td>
-                <td th:text="${fullOvertimeTrainsStatistic.getAvgEffectiveDuration()}"></td>
             </tr>
             </tbody>
         </table>
@@ -131,14 +134,23 @@
         <table class="table">
             <thead>
             <tr>
-                <th>Количество накоплений</th>
-                <th>Средняя продолжительность накоплений в транзитных с переработкой</th>
+                <th>Тип поездов</th>
+                <th>Средний простой</th>
+                <th>Вагонов в модели</th>
+                <th>Рабочий парк</th>
             </tr>
             </thead>
             <tbody>
             <tr>
-                <td th:text="${accumulationDescentTrains.getCount()}"></td>
-                <td th:text="${stringAccumulationDescentTrainsAvgTime}"></td>
+                <td>Транзит без переработки</td>
+                <td th:text="${hoursTransitWithoutProcessing}"></td>
+                <td th:text="${transitWithoutProcessing}"></td>
+                <td th:rowspan="2" th:text="${workingPark}"></td>
+            </tr>
+            <tr>
+                <td>Транзит c переработкой</td>
+                <td th:text="${hoursTransitWithProcessing}"></td>
+                <td th:text="${transitWithProcessing}"></td>
             </tr>
             </tbody>
         </table>
