@@ -15,7 +15,7 @@ public class CargoOperationsService {
     public Map<String, List<List<Action>>> findCargoOperations(Map<String, HeightRange> heightRangeMap) {
     // Коллекция для хранения найденных транзитных поездов для каждого диапазона
     //Пары - действия TRAIN_ARRIVAL и TRAIN_DEPARTURE
-    Map<String, List<List<Action>>> localTrainsMap = new LinkedHashMap<>();
+    Map<String, List<List<Action>>> cargoOperationsMap = new LinkedHashMap<>();
 
     for (Map.Entry<String, HeightRange> entry : heightRangeMap.entrySet()) {
         String name = entry.getKey();
@@ -25,16 +25,16 @@ public class CargoOperationsService {
         // Инициализация списка для хранения транзитных поездов для текущего диапазона
         List<List<Action>> pairsForCurrentRange = new ArrayList<>();
         List<Action> actionListAfterTrain_ARRIVAL = new ArrayList<>();
-        boolean trainArrivalFound = false;
+        boolean sidetrackProvisionFound = false;
         int max_time=0;
 
         for (int i = 0; i < actions.size(); i++) {
             Action currentAction = actions.get(i);
             // Начинаем новую пару, если находим SIDETRACK_PROVISION и в данный момент не ищем другую пару
-            if (currentAction.getType() == ActionType.SIDETRACK_PROVISION && !trainArrivalFound) {
-                trainArrivalFound = true;
+            if (currentAction.getType() == ActionType.SIDETRACK_PROVISION && !sidetrackProvisionFound) {
+                sidetrackProvisionFound = true;
                 actionListAfterTrain_ARRIVAL.add(currentAction);
-            } else if (trainArrivalFound) {
+            } else if (sidetrackProvisionFound) {
                 // Проверка на наличие элементов в actionListAfterTrain_ARRIVAL
                 if (!actionListAfterTrain_ARRIVAL.isEmpty()) {
                     Action lastAddedAction = actionListAfterTrain_ARRIVAL.get(actionListAfterTrain_ARRIVAL.size() - 1);
@@ -77,7 +77,7 @@ public class CargoOperationsService {
                         if (actionListAfterTrain_ARRIVAL.size() > 2) {
                             pairsForCurrentRange.add(new ArrayList<>(actionListAfterTrain_ARRIVAL));
                             actionListAfterTrain_ARRIVAL.clear();
-                            trainArrivalFound = false;
+                            sidetrackProvisionFound = false;
                         }
                     }
                 }
@@ -85,10 +85,10 @@ public class CargoOperationsService {
         }
 
         if (!pairsForCurrentRange.isEmpty()) {
-            localTrainsMap.put(name, pairsForCurrentRange);
+            cargoOperationsMap.put(name, pairsForCurrentRange);
         }
     }
-    for (Map.Entry<String, List<List<Action>>> entry : localTrainsMap.entrySet()) {
+    for (Map.Entry<String, List<List<Action>>> entry : cargoOperationsMap.entrySet()) {
         String path = entry.getKey(); // Путь (ключ)
         List<List<Action>> actionsLists = entry.getValue(); // Список действий
 
@@ -100,7 +100,7 @@ public class CargoOperationsService {
         }
         System.out.println(); // Отступ между путями
     }
-    return localTrainsMap;
+    return cargoOperationsMap;
     }
 }
 
