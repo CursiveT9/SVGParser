@@ -8,15 +8,15 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 @Service
-public class TrainsWithOvertimeService {
+public class ArrivalService {
 
     private final TimeService timeService;
 
-    public TrainsWithOvertimeService(TimeService timeService) {
+    public ArrivalService(TimeService timeService) {
         this.timeService = timeService;
     }
 
-    public Map<String, List<List<Action>>> findTrainsWithOvertime(Map<String, HeightRange> heightRangeMap) {
+    public Map<String, List<List<Action>>> findTrainsWithProcessing(Map<String, HeightRange> heightRangeMap) {
         Map<String, List<List<Action>>> reprocessedTrainsMap = new LinkedHashMap<>();
 
         for (Map.Entry<String, HeightRange> entry : heightRangeMap.entrySet()) {

@@ -36,7 +36,7 @@ public class MainController {
     private final SVGService svgService;
     private final TimeService timeService;
     private final TransitTrainsService transitTrainsService;
-    private final TrainsWithOvertimeService trainsWithOvertimeService;
+    private final ArrivalService arrivalService;
 
     public final DepartureService departureService;
 
@@ -51,12 +51,12 @@ public class MainController {
     private byte[] excelBytes;
 
 
-    public MainController(SimpleExcelService excelService, SVGService svgService, TimeService timeService, TransitTrainsService transitTrainsService, TrainsWithOvertimeService trainsWithOvertimeService, TrainStatisticsService trainStatisticsService, AccumulationService accumulationService, DepartureService departureService, SumStatisticService sumStatisticService, CargoOperationsService cargoOperationsService) {
+    public MainController(SimpleExcelService excelService, SVGService svgService, TimeService timeService, TransitTrainsService transitTrainsService, ArrivalService arrivalService, TrainStatisticsService trainStatisticsService, AccumulationService accumulationService, DepartureService departureService, SumStatisticService sumStatisticService, CargoOperationsService cargoOperationsService) {
         this.excelService = excelService;
         this.svgService = svgService;
         this.timeService = timeService;
         this.transitTrainsService = transitTrainsService;
-        this.trainsWithOvertimeService = trainsWithOvertimeService;
+        this.arrivalService = arrivalService;
         this.trainStatisticsService = trainStatisticsService;
         this.accumulationService = accumulationService;
         this.departureService = departureService;
@@ -93,7 +93,7 @@ public class MainController {
 
             Map<String, HeightRange> map = svgService.parseSvg(tempFile);
             Map<String, List<List<Action>>> transitTrainsMap = transitTrainsService.findTransitTrains(map);
-            Map<String, List<List<Action>>> overtimeTrainsMap = trainsWithOvertimeService.findTrainsWithOvertime(map);
+            Map<String, List<List<Action>>> arrivalTrainsMap = arrivalService.findTrainsWithProcessing(map);
             Map<String, List<List<Action>>> cargoOperationsMap = cargoOperationsService.findCargoOperations(map);
             AccumulationLastAndDescentFields accumulationDescentTrains = accumulationService.findAverageAccumulationDuration(map);
             AccumulationLastAndDescentFields endAccumulationDescentTrains = accumulationService.findEndAccumulationSequences(map);
@@ -109,16 +109,16 @@ public class MainController {
             excelBytes = bos.toByteArray();
             TrainStatistics transitWithoutProcessingStatistic=trainStatisticsService.calculateTrainStatistics(transitTrainsMap, timeService);
             TrainStatistics cargoOperationsStatistic=trainStatisticsService.calculateTrainStatistics(cargoOperationsMap, timeService);
-            TrainStatistics overtimeTrainsStatistic=trainStatisticsService.calculateTrainStatistics(overtimeTrainsMap, timeService);
+            TrainStatistics arrivalTrainsStatistic=trainStatisticsService.calculateTrainStatistics(arrivalTrainsMap, timeService);
             TrainStatistics departureTrainsStatistic=trainStatisticsService.calculateTrainStatistics(departureTrainsMap, timeService);
             TrainStatistics transitWithProcessingStatistic = sumStatisticService.sumPartsOfWithOvertimeTrains
-                    (overtimeTrainsStatistic,
+                    (arrivalTrainsStatistic,
                     departureTrainsStatistic,
                     accumulationDescentTrains);
             TrainStatistics localTrainsStatistic = sumStatisticService.sumPartsOfLocalTrains(transitWithProcessingStatistic,cargoOperationsStatistic);
 
             model.addAttribute("transitWithoutProcessingStatistics", transitWithoutProcessingStatistic);
-            model.addAttribute("arrivalTrainsStatistic", overtimeTrainsStatistic);
+            model.addAttribute("arrivalTrainsStatistic", arrivalTrainsStatistic);
             model.addAttribute("departureTrainsStatistic", departureTrainsStatistic);
             model.addAttribute("transitWithProcessingStatistics", transitWithProcessingStatistic);
             model.addAttribute("cargoOperationsStatistic", cargoOperationsStatistic);
