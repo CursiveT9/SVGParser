@@ -19,8 +19,17 @@ public class SVGService {
     static final Double START_X_FROM_0 = 250.0;
     static Integer END_X;
 
-    int startTime;
+    private Integer end_x;
 
+    public Integer getEnd_x() {
+        return end_x;
+    }
+
+    public void setEnd_x(Integer end_x) {
+        this.end_x = end_x;
+    }
+
+    int startTime;
 
     public LinkedHashMap<String, HeightRange> parseSvg(File svgFile) {
         try {
@@ -39,6 +48,7 @@ public class SVGService {
             String widthStr = documentElement.getAttribute("width");
             int width = (int) Math.round(Double.parseDouble(widthStr));
             END_X = width;
+            setEnd_x(END_X);
 
 
             // Получение списка всех элементов <g> в документе
@@ -307,18 +317,19 @@ public class SVGService {
                                     Element pathElement = (Element) pathList.item(0);
                                     String dAttribute = pathElement.getAttribute("d");
                                     String[] commands = dAttribute.split("\\s+");
-                                    if (commands[1].equals(commands[4]) && commands[4].equals(commands[10])) { // треугольник на подъем
+                                    if (commands[1].equals(commands[10]) && commands[4].equals(commands[7])) { // треугольник на подъем
                                         heightRangesMap.get(range).addAction(ActionType.LOADING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
-                                    } else if (commands[1].equals(commands[7]) && commands[7].equals(commands[10])) { // треугольник на спуск
-                                        if (commands[2].equals(commands[5])) { // отзеркаленый треугольник на подъём(треугольник в верхнем левом углу)
+                                    }
+                                    else if (commands[1].equals(commands[7]) && commands[7].equals(commands[10])&&!pathElement.getAttribute("fill").equals("9ACD32")) { // треугольник на спуск
+                                        if (commands[2].equals(commands[5]) && pathElement.getAttribute("fill").equals("9ACD32")) { // отзеркаленый треугольник на подъём(треугольник в верхнем левом углу)
                                             heightRangesMap.get(range).addAction(ActionType.TRAIN_LOCOMOTIVE_ATTACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                             break;
                                         } else {
                                             heightRangesMap.get(range).addAction(ActionType.UNLOADING, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                             break;
                                         }
-                                    } else if (commands[1].equals(commands[10]) && commands[4].equals(commands[7])) {  // отзеркаленый треугольник на спуск(треугольник в верхнем правом углу)
+                                    } else if (commands[1].equals(commands[10]) && commands[4].equals(commands[7])&&pathElement.getAttribute("fill").equals("9ACD32")) {  // отзеркаленый треугольник на спуск(треугольник в верхнем правом углу)
                                         heightRangesMap.get(range).addAction(ActionType.TRAIN_LOCOMOTIVE_DETACHMENT, calculateTime(elementStartX), calculateTime(elementEndX), calculateTimeDuration(elementStartX, elementEndX));
                                         break;
                                     }

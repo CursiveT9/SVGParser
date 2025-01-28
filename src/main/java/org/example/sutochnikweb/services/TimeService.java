@@ -2,6 +2,9 @@ package org.example.sutochnikweb.services;
 
 import org.springframework.stereotype.Service;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+
 @Service
 public class TimeService {
     public String convertMillisToTime(int millis){
@@ -53,11 +56,32 @@ public class TimeService {
         return startTime*60*60*1000;
     }
 
-    public int getHoursFromDuration(String duration) {
+    public double getHoursFromDuration(String duration) {
         if (duration != null && !duration.isEmpty()) {
-            return Integer.parseInt(duration.substring(0, 2)); // Извлекаем первые две цифры
+            String[] parts = duration.split(":"); // Разделяем строку по символу ':'
+            if (parts.length == 3) {
+                int hours = Integer.parseInt(parts[0]); // Извлекаем часы
+                int minutes = Integer.parseInt(parts[1]); // Извлекаем минуты
+                // Преобразуем минуты в доли часа и складываем
+                return hours + (minutes / 60.0);
+            }
         }
-        return 0; // Значение по умолчанию
+        return 0.0; // Значение по умолчанию
+    }
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
+    public String addDurations(String... durations) {
+        int totalSeconds = 0;
+
+        for (String duration : durations) {
+            if (duration != null && !duration.isEmpty()) {
+                LocalTime time = LocalTime.parse(duration, TIME_FORMATTER);
+                totalSeconds += time.toSecondOfDay();
+            }
+        }
+
+        // Преобразуем общие секунды обратно в формат времени
+        LocalTime totalTime = LocalTime.ofSecondOfDay(totalSeconds % (24 * 3600));
+        return totalTime.format(TIME_FORMATTER);
     }
 
 }

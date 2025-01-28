@@ -83,6 +83,7 @@
 <div class="container">
     <div class="table-container">
         <!-- Упрощённая таблица -->
+        <H2 th:text="${fileName}"></H2>
         <table class="table">
             <thead>
             <tr>
@@ -94,16 +95,15 @@
             </tr>
             </thead>
             <tbody>
-            <!-- Раздел "Транзитные поезда" -->
             <tr>
-                <td>Транзит без переработки</td>
+                <td><b>Транзит без переработки</b></td>
                 <td th:text="${transitWithoutProcessingStatistics.getTotalTrains()}"></td>
                 <td th:text="${transitWithoutProcessingStatistics.getAvgDuration()}"></td>
                 <td th:text="${transitWithoutProcessingStatistics.getAvgWaitingDuration()}"></td>
                 <td th:text="${transitWithoutProcessingStatistics.getAvgEffectiveDuration()}"></td>
             </tr>
             <tr>
-                <td>Транзит с переработкой</td>
+                <td><b>Транзит с переработкой</b></td>
                 <td th:text="${transitWithProcessingStatistics.getTotalTrains()}"></td>
                 <td th:text="${transitWithProcessingStatistics.getAvgDuration()}"></td>
                 <td th:text="${transitWithProcessingStatistics.getAvgWaitingDuration()}"></td>
@@ -127,6 +127,20 @@
                 <td th:text="${departureTrainsStatistic.getAvgWaitingDuration()}"></td>
                 <td th:text="${departureTrainsStatistic.getAvgEffectiveDuration()}"></td>
             </tr>
+            <tr>
+                <td><b>Местные вагоны</b></td>
+                <td th:text="${localTrainsStatistic.getTotalTrains()}"></td>
+                <td th:text="${localTrainsStatistic.getAvgDuration()}"></td>
+                <td th:text="${localTrainsStatistic.getAvgWaitingDuration()}"></td>
+                <td th:text="${localTrainsStatistic.getAvgEffectiveDuration()}"></td>
+            </tr>
+            <tr>
+                <td>Грузовые операции</td>
+                <td th:text="${cargoOperationsStatistic.getTotalTrains()}"></td>
+                <td th:text="${cargoOperationsStatistic.getAvgDuration()}"></td>
+                <td th:text="${cargoOperationsStatistic.getAvgWaitingDuration()}"></td>
+                <td th:text="${cargoOperationsStatistic.getAvgEffectiveDuration()}"></td>
+            </tr>
             </tbody>
         </table>
     </div>
@@ -143,14 +157,19 @@
             <tbody>
             <tr>
                 <td>Транзит без переработки</td>
-                <td th:text="${hoursTransitWithoutProcessing}"></td>
+                <td th:text="${#numbers.formatDecimal(hoursTransitWithoutProcessing, 1, 2)}"></td>
                 <td th:text="${transitWithoutProcessing}"></td>
-                <td th:rowspan="2" th:text="${workingPark}"></td>
+                <td th:rowspan="3" th:text="${workingPark}"></td>
             </tr>
             <tr>
                 <td>Транзит c переработкой</td>
-                <td th:text="${hoursTransitWithProcessing}"></td>
+                <td th:text="${#numbers.formatDecimal(hoursTransitWithProcessing, 1, 2)}"></td>
                 <td th:text="${transitWithProcessing}"></td>
+            </tr>
+            <tr>
+                <td>Местные вагоны</td>
+                <td th:text="${#numbers.formatDecimal(hoursLocalTrains, 1, 2)}"></td>
+                <td th:text="${localTrains}"></td>
             </tr>
             </tbody>
         </table>

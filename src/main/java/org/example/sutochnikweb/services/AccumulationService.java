@@ -106,9 +106,6 @@ public class AccumulationService {
                 double averageDuration = (double) totalDuration / durations.size();
                 totalAccumulationCount+=durations.size();
                 totalAverageDuration+=totalDuration;
-                System.out.println("Range: " + heightRange.getName());
-                System.out.println("Durations: " + durations);
-                System.out.println("Total Duration: " + totalDuration);
             }
         }
         //37 два раза считает
@@ -116,10 +113,6 @@ public class AccumulationService {
         accumulationLastAndDescentFields.setAvgDuration(
                 totalAccumulationCount > 0 ? totalAverageDuration/totalAccumulationCount : 0
         );
-        System.out.println("Total Accumulation Count: "+totalAccumulationCount);
-        System.out.println("Total Average Duration: " +totalAverageDuration);
-        System.out.println("Total 1/2: "+totalAverageDuration/accumulationRanges.size());
-        System.out.println(accumulationRanges.size());
         return accumulationLastAndDescentFields; // Возвращаем map с результатами
     }
 
@@ -192,12 +185,9 @@ public class AccumulationService {
             // Вычисляем среднюю продолжительность, если найдены последовательности
             if (count > 0) {
                 double averageDuration = (double) totalDuration / count;
-                totalAccumulationCount+=count;
-                totalAverageDuration+=averageDuration;
+                totalAccumulationCount += count;
+                totalAverageDuration += averageDuration;
                 accumulationRanges.add(heightRange);
-                System.out.println("Range: " + heightRange.getName());
-                System.out.println("Durations: " + averageDuration);
-                System.out.println("Total Duration: " + totalDuration);                //endAccumulationMap.put(name, stringAverageDuration);
             }
         }
 

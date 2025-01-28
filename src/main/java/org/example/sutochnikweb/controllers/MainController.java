@@ -44,12 +44,14 @@ public class MainController {
 
     private final AccumulationService accumulationService;
 
-    private final FullTransitWithOvertimeStatisticService fullTransitWithOvertimeStatisticService;
+    private final SumStatisticService sumStatisticService;
+
+    private final CargoOperationsService cargoOperationsService;
 
     private byte[] excelBytes;
 
 
-    public MainController(SimpleExcelService excelService, SVGService svgService, TimeService timeService, TransitTrainsService transitTrainsService, TrainsWithOvertimeService trainsWithOvertimeService, TrainStatisticsService trainStatisticsService, AccumulationService accumulationService, DepartureService departureService, FullTransitWithOvertimeStatisticService fullTransitWithOvertimeStatisticService) {
+    public MainController(SimpleExcelService excelService, SVGService svgService, TimeService timeService, TransitTrainsService transitTrainsService, TrainsWithOvertimeService trainsWithOvertimeService, TrainStatisticsService trainStatisticsService, AccumulationService accumulationService, DepartureService departureService, SumStatisticService sumStatisticService, CargoOperationsService cargoOperationsService) {
         this.excelService = excelService;
         this.svgService = svgService;
         this.timeService = timeService;
@@ -58,7 +60,8 @@ public class MainController {
         this.trainStatisticsService = trainStatisticsService;
         this.accumulationService = accumulationService;
         this.departureService = departureService;
-        this.fullTransitWithOvertimeStatisticService = fullTransitWithOvertimeStatisticService;
+        this.sumStatisticService = sumStatisticService;
+        this.cargoOperationsService = cargoOperationsService;
     }
 
     @GetMapping("/")
@@ -73,7 +76,7 @@ public class MainController {
 
     @PostMapping("/upload")
     public String uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("transitWithProcessing") int transitWithProcessing,
-                             @RequestParam("transitWithoutProcessing") int transitWithoutProcessing, Model model) {
+                             @RequestParam("transitWithoutProcessing") int transitWithoutProcessing,@RequestParam("localTrains") int localTrains, Model model) {
         if (file.isEmpty()) {
             model.addAttribute("message", "Пожалуйста, выберите файл для загрузки");
             return "upload";
@@ -91,12 +94,12 @@ public class MainController {
             Map<String, HeightRange> map = svgService.parseSvg(tempFile);
             Map<String, List<List<Action>>> transitTrainsMap = transitTrainsService.findTransitTrains(map);
             Map<String, List<List<Action>>> overtimeTrainsMap = trainsWithOvertimeService.findTrainsWithOvertime(map);
+            Map<String, List<List<Action>>> cargoOperationsMap = cargoOperationsService.findCargoOperations(map);
             AccumulationLastAndDescentFields accumulationDescentTrains = accumulationService.findAverageAccumulationDuration(map);
             AccumulationLastAndDescentFields endAccumulationDescentTrains = accumulationService.findEndAccumulationSequences(map);
             accumulationDescentTrains.setCount(accumulationDescentTrains.getCount()+endAccumulationDescentTrains.getCount());
-            System.out.println(accumulationDescentTrains);
-            System.out.println(endAccumulationDescentTrains);
             accumulationDescentTrains.setAvgDuration((accumulationDescentTrains.getAvgDuration()*accumulationDescentTrains.getCount()+endAccumulationDescentTrains.getAvgDuration()*endAccumulationDescentTrains.getCount())/(accumulationDescentTrains.getCount()+endAccumulationDescentTrains.getCount()));
+
             Map<String, List<List<Action>>> departureTrainsMap = departureService.findFormationOrShuntingPairs(map);
 
             Workbook excelFile = excelService.convertToExcel(map);
@@ -105,31 +108,32 @@ public class MainController {
             excelFile.write(bos);
             excelBytes = bos.toByteArray();
             TrainStatistics transitWithoutProcessingStatistic=trainStatisticsService.calculateTrainStatistics(transitTrainsMap, timeService);
+            TrainStatistics cargoOperationsStatistic=trainStatisticsService.calculateTrainStatistics(cargoOperationsMap, timeService);
             TrainStatistics overtimeTrainsStatistic=trainStatisticsService.calculateTrainStatistics(overtimeTrainsMap, timeService);
             TrainStatistics departureTrainsStatistic=trainStatisticsService.calculateTrainStatistics(departureTrainsMap, timeService);
-            TrainStatistics transitWithProcessingStatistics = fullTransitWithOvertimeStatisticService.sumPartsOfWithOvertimeTrains
+            TrainStatistics transitWithProcessingStatistic = sumStatisticService.sumPartsOfWithOvertimeTrains
                     (overtimeTrainsStatistic,
                     departureTrainsStatistic,
                     accumulationDescentTrains);
+            TrainStatistics localTrainsStatistic = sumStatisticService.sumPartsOfLocalTrains(transitWithProcessingStatistic,cargoOperationsStatistic);
 
             model.addAttribute("transitWithoutProcessingStatistics", transitWithoutProcessingStatistic);
             model.addAttribute("arrivalTrainsStatistic", overtimeTrainsStatistic);
             model.addAttribute("departureTrainsStatistic", departureTrainsStatistic);
-            model.addAttribute("transitWithProcessingStatistics", transitWithProcessingStatistics);
+            model.addAttribute("transitWithProcessingStatistics", transitWithProcessingStatistic);
+            model.addAttribute("cargoOperationsStatistic", cargoOperationsStatistic);
+            model.addAttribute("localTrainsStatistic", localTrainsStatistic);
 
             model.addAttribute("accumulationDescentTrains", accumulationDescentTrains);
-            System.out.println(accumulationDescentTrains);
             model.addAttribute("stringAccumulationDescentTrainsAvgTime", timeService.convertMillisToTime(accumulationDescentTrains.getAvgDuration()));
             model.addAttribute("transitWithoutProcessing", transitWithoutProcessing);
             model.addAttribute("transitWithProcessing", transitWithProcessing);
+            model.addAttribute("localTrains", localTrains);
             model.addAttribute("hoursTransitWithoutProcessing", timeService.getHoursFromDuration(transitWithoutProcessingStatistic.getAvgDuration()));
-            model.addAttribute("hoursTransitWithProcessing", timeService.getHoursFromDuration(transitWithProcessingStatistics.getAvgDuration()));
-            model.addAttribute("workingPark", trainStatisticsService.calculateWorkingPark(transitWithProcessing, transitWithoutProcessing, transitWithoutProcessingStatistic, transitWithProcessingStatistics));
-
-//Тесты
-            //model.addAttribute("departureTrains", departureTrainsMap);
-            //Map<String, List<String>> pairsTimeMap = departureService.getPairsDurations(departureTrainsMap);
-            //model.addAttribute("departureTrains", pairsTimeMap);
+            model.addAttribute("hoursTransitWithProcessing", timeService.getHoursFromDuration(transitWithProcessingStatistic.getAvgDuration()));
+            model.addAttribute("hoursLocalTrains", timeService.getHoursFromDuration(localTrainsStatistic.getAvgDuration()));
+            model.addAttribute("workingPark", trainStatisticsService.calculateWorkingPark(transitWithProcessing, transitWithoutProcessing, localTrains ,transitWithProcessingStatistic, transitWithoutProcessingStatistic, localTrainsStatistic));
+            model.addAttribute("fileName", originalFileName);
 
             return "preview";
 

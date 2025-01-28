@@ -64,10 +64,11 @@ public class TrainStatisticsService {
         return new TrainStatistics(totalTrains, avgDuration, avgWaitingDuration, avgEffectiveDuration);
     }
 
-    public int calculateWorkingPark(int transitWithProcessingCount, int transitWithoutProcessingCount,
-                                    TrainStatistics transitWithProcessingParams, TrainStatistics transitWithoutProcessingParams){
-        return (timeService.getHoursFromDuration(transitWithProcessingParams.getAvgDuration()) *
-                timeService.getHoursFromDuration(transitWithoutProcessingParams.getAvgDuration())+
-                transitWithProcessingCount*transitWithoutProcessingCount)/24;
+    public int calculateWorkingPark(int transitWithProcessingCount, int transitWithoutProcessingCount, int localTrainsCount,
+                                    TrainStatistics transitWithProcessingParams, TrainStatistics transitWithoutProcessingParams, TrainStatistics localTrainsParams){
+         return (int) Math.round(((timeService.getHoursFromDuration(transitWithProcessingParams.getAvgDuration()+timeService.getHoursFromDuration(localTrainsParams.getAvgDuration())) * transitWithProcessingCount)+
+                (timeService.getHoursFromDuration(transitWithoutProcessingParams.getAvgDuration())*transitWithoutProcessingCount)+
+                (timeService.getHoursFromDuration(localTrainsParams.getAvgDuration())*localTrainsCount)
+        )/24);
     }
 }
